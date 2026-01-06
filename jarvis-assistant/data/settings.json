@@ -1,0 +1,11 @@
+{
+  "theme": "jarvis_dark",
+  "auto_start": false,
+  "default_pomodoro": 25,
+  "wisdom_enabled": true,
+  "notification_sound": true,
+  "minimize_to_tray": false,
+  "show_command_bar": true,
+  "window_width": 1200,
+  "window_height": 800
+}

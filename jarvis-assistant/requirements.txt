@@ -1,0 +1,10 @@
+# JARVIS AI Production Assistant - Dependencies
+
+# GUI Framework
+PyQt6>=6.6.0
+
+# Windows Integration (optional, for auto-start shortcut feature)
+# pywin32>=306  # Uncomment if you want advanced shortcut creation
+
+# Note: pywin32 is optional and only needed for advanced Windows integration
+# The application will work without it using the registry-based auto-start method

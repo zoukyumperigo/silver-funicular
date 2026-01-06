@@ -1,0 +1,68 @@
+{
+  "prompts": [
+    {
+      "id": "prompt-001",
+      "title": "SaaS Landing Page Copy",
+      "content": "Write conversion-focused copy for a SaaS landing page:\n\nProduct: [PRODUCT NAME]\nTarget Audience: [AUDIENCE]\nMain Benefit: [BENEFIT]\n\nInclude:\n- Hero headline\n- Subheadline\n- 3 key features\n- Call to action\n- Social proof section",
+      "category": "copywriting",
+      "tags": ["saas", "marketing", "landing-page"],
+      "created": "2026-01-06T10:00:00Z"
+    },
+    {
+      "id": "prompt-002",
+      "title": "Python FastAPI Boilerplate",
+      "content": "Generate a production-ready FastAPI application with:\n\n- SQLAlchemy ORM\n- JWT authentication\n- CORS middleware\n- Pydantic models\n- Error handling\n- Docker setup\n- .env configuration\n\nInclude folder structure and main files.",
+      "category": "code",
+      "tags": ["python", "fastapi", "backend"],
+      "created": "2026-01-06T10:05:00Z"
+    },
+    {
+      "id": "prompt-003",
+      "title": "YouTube Video Script",
+      "content": "Create a YouTube video script:\n\nTopic: [TOPIC]\nDuration: [DURATION]\nTarget Audience: [AUDIENCE]\n\nStructure:\n- Hook (first 10 seconds)\n- Introduction\n- Main content (3-5 key points)\n- Call to action\n- Outro\n\nTone: [TONE]",
+      "category": "video",
+      "tags": ["youtube", "script", "content"],
+      "created": "2026-01-06T10:10:00Z"
+    },
+    {
+      "id": "prompt-004",
+      "title": "Ebook Outline Generator",
+      "content": "Generate a comprehensive ebook outline:\n\nTopic: [TOPIC]\nTarget Reader: [READER]\nGoal: [GOAL]\n\nCreate:\n- Book title options (3)\n- Subtitle\n- Chapter structure (8-12 chapters)\n- Key takeaways per chapter\n- Bonus content ideas",
+      "category": "ebook",
+      "tags": ["ebook", "writing", "outline"],
+      "created": "2026-01-06T10:15:00Z"
+    },
+    {
+      "id": "prompt-005",
+      "title": "Social Media Content Calendar",
+      "content": "Create a 30-day social media content calendar:\n\nBrand: [BRAND]\nPlatforms: [PLATFORMS]\nNiche: [NICHE]\nGoals: [GOALS]\n\nFor each post include:\n- Caption\n- Hashtags\n- Best posting time\n- Content type (image/video/carousel)\n- Call to action",
+      "category": "social-media",
+      "tags": ["social-media", "content-calendar", "marketing"],
+      "created": "2026-01-06T10:20:00Z"
+    },
+    {
+      "id": "prompt-006",
+      "title": "Code Review Checklist",
+      "content": "Review this code and check:\n\n✓ Code Quality:\n- Clear variable names\n- Proper function decomposition\n- DRY principle\n- SOLID principles\n\n✓ Security:\n- Input validation\n- SQL injection prevention\n- XSS protection\n- Authentication/Authorization\n\n✓ Performance:\n- Algorithm efficiency\n- Database queries\n- Memory usage\n- Caching opportunities\n\n✓ Testing:\n- Unit test coverage\n- Edge cases\n- Error handling\n\nProvide specific recommendations.",
+      "category": "code",
+      "tags": ["code-review", "quality", "security"],
+      "created": "2026-01-06T10:25:00Z"
+    },
+    {
+      "id": "prompt-007",
+      "title": "Business Plan Generator",
+      "content": "Create a lean business plan:\n\nBusiness Idea: [IDEA]\nIndustry: [INDUSTRY]\nTarget Market: [MARKET]\n\nSections:\n1. Executive Summary\n2. Problem Statement\n3. Solution\n4. Market Analysis\n5. Revenue Model\n6. Marketing Strategy\n7. Financial Projections (Year 1)\n8. Milestones (90 days)",
+      "category": "business",
+      "tags": ["business-plan", "startup", "strategy"],
+      "created": "2026-01-06T10:30:00Z"
+    },
+    {
+      "id": "prompt-008",
+      "title": "React Component Generator",
+      "content": "Generate a React component with TypeScript:\n\nComponent: [NAME]\nPurpose: [PURPOSE]\n\nRequirements:\n- TypeScript interfaces\n- Props validation\n- Custom hooks if needed\n- Error boundaries\n- Accessibility (ARIA)\n- Unit tests (Jest)\n- Storybook story\n\nUse modern React patterns (hooks, context).",
+      "category": "code",
+      "tags": ["react", "typescript", "frontend"],
+      "created": "2026-01-06T10:35:00Z"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "tools": [
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT",
+      "url": "https://chat.openai.com",
+      "category": "text",
+      "favorite": true,
+      "description": "OpenAI's conversational AI"
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "url": "https://claude.ai",
+      "category": "text",
+      "favorite": true,
+      "description": "Anthropic's AI assistant"
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini",
+      "url": "https://gemini.google.com",
+      "category": "text",
+      "favorite": true,
+      "description": "Google's AI model"
+    },
+    {
+      "id": "midjourney",
+      "name": "Midjourney",
+      "url": "https://www.midjourney.com",
+      "category": "image",
+      "favorite": false,
+      "description": "AI image generation"
+    },
+    {
+      "id": "runway",
+      "name": "Runway",
+      "url": "https://runwayml.com",
+      "category": "video",
+      "favorite": false,
+      "description": "AI video creation"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "quotes": [
+    {
+      "id": 1,
+      "source": "islam",
+      "arabic": "إِنَّ مَعَ الْعُسْرِ يُسْرًا",
+      "transliteration": "Inna ma'al usri yusra",
+      "portuguese": "Certamente, com a dificuldade vem a facilidade",
+      "reference": "Alcorão 94:6"
+    },
+    {
+      "id": 2,
+      "source": "islam",
+      "arabic": "وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ",
+      "transliteration": "Wa man yatawakkal 'ala Allahi fahuwa hasbuhu",
+      "portuguese": "E quem confia em Allah, Ele lhe basta",
+      "reference": "Alcorão 65:3"
+    },
+    {
+      "id": 3,
+      "source": "islam",
+      "arabic": "فَاصْبِرْ إِنَّ وَعْدَ اللَّهِ حَقٌّ",
+      "transliteration": "Fasbir inna wa'da Allahi haqq",
+      "portuguese": "Então seja paciente, pois a promessa de Allah é verdadeira",
+      "reference": "Alcorão 30:60"
+    },
+    {
+      "id": 4,
+      "source": "greece",
+      "greek": "Γνῶθι σεαυτόν",
+      "transliteration": "Gnōthi seauton",
+      "portuguese": "Conhece-te a ti mesmo",
+      "reference": "Templo de Delfos"
+    },
+    {
+      "id": 5,
+      "source": "greece",
+      "greek": "Ἀρχὴ σοφίας φόβος Κυρίου",
+      "transliteration": "Arkhē sophias phobos Kyriou",
+      "portuguese": "O princípio da sabedoria é o temor ao Senhor",
+      "reference": "Provérbios (tradição helenística)"
+    },
+    {
+      "id": 6,
+      "source": "greece",
+      "original": "Excellence is never an accident. It is always the result of high intention, sincere effort, and intelligent execution.",
+      "portuguese": "A excelência nunca é um acidente. É sempre o resultado de alta intenção, esforço sincero e execução inteligente.",
+      "reference": "Aristóteles"
+    },
+    {
+      "id": 7,
+      "source": "greece",
+      "original": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+      "portuguese": "Somos o que fazemos repetidamente. A excelência, portanto, não é um ato, mas um hábito.",
+      "reference": "Aristóteles"
+    },
+    {
+      "id": 8,
+      "source": "rome",
+      "latin": "Per aspera ad astra",
+      "portuguese": "Através das adversidades, até as estrelas",
+      "reference": "Sêneca"
+    },
+    {
+      "id": 9,
+      "source": "rome",
+      "latin": "Veni, vidi, vici",
+      "portuguese": "Vim, vi, venci",
+      "reference": "Júlio César"
+    },
+    {
+      "id": 10,
+      "source": "rome",
+      "latin": "Carpe diem",
+      "portuguese": "Aproveite o dia",
+      "reference": "Horácio"
+    },
+    {
+      "id": 11,
+      "source": "rome",
+      "latin": "Memento mori",
+      "portuguese": "Lembre-se que você vai morrer",
+      "reference": "Filosofia Estoica"
+    },
+    {
+      "id": 12,
+      "source": "rome",
+      "latin": "Amor fati",
+      "portuguese": "Amor ao destino",
+      "reference": "Marco Aurélio"
+    },
+    {
+      "id": 13,
+      "source": "rome",
+      "latin": "Festina lente",
+      "portuguese": "Apresse-se lentamente",
+      "reference": "Augusto César"
+    },
+    {
+      "id": 14,
+      "source": "rome",
+      "original": "The impediment to action advances action. What stands in the way becomes the way.",
+      "portuguese": "O impedimento à ação avança a ação. O que está no caminho torna-se o caminho.",
+      "reference": "Marco Aurélio"
+    },
+    {
+      "id": 15,
+      "source": "rome",
+      "original": "It is not the man who has too little, but the man who craves more, that is poor.",
+      "portuguese": "Não é o homem que tem pouco, mas o homem que deseja mais, que é pobre.",
+      "reference": "Sêneca"
+    }
+  ]
+}
