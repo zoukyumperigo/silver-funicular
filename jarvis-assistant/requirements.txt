@@ -3,8 +3,14 @@
 # GUI Framework
 PyQt6>=6.6.0
 
+# System Monitoring
+psutil>=5.9.0
+
+# HTTP Requests (for API calls - optional for MVP)
+# requests>=2.31.0  # Uncomment if you want real API data for stocks/forex/weather
+
 # Windows Integration (optional, for auto-start shortcut feature)
 # pywin32>=306  # Uncomment if you want advanced shortcut creation
 
-# Note: pywin32 is optional and only needed for advanced Windows integration
-# The application will work without it using the registry-based auto-start method
+# Note: pywin32 and requests are optional
+# The application will work without them using simulated data and registry-based auto-start

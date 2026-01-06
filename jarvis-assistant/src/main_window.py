@@ -9,6 +9,7 @@ from .ui.styles import get_style
 from .ui.sidebar import Sidebar
 from .ui.command_bar import CommandBar
 from .views.dashboard import DashboardView
+from .views.hud_dashboard import HUDDashboard
 from .views.ai_tools import AIToolsView
 from .views.pomodoro import PomodoroView
 from .views.prompts import PromptsView
@@ -76,6 +77,11 @@ class MainWindow(QMainWindow):
             self.session_tracker,
             self.wisdom_engine
         )
+        self.hud_dashboard = HUDDashboard(
+            self.data_manager,
+            self.session_tracker,
+            self.wisdom_engine
+        )
         self.ai_tools_view = AIToolsView(self.data_manager)
         self.pomodoro_view = PomodoroView(
             self.pomodoro_engine,
@@ -88,11 +94,12 @@ class MainWindow(QMainWindow):
 
         # Add views to stack
         self.stack.addWidget(self.dashboard_view)   # 0
-        self.stack.addWidget(self.ai_tools_view)    # 1
-        self.stack.addWidget(self.pomodoro_view)    # 2
-        self.stack.addWidget(self.prompts_view)     # 3
-        self.stack.addWidget(self.reports_view)     # 4
-        self.stack.addWidget(self.settings_view)    # 5
+        self.stack.addWidget(self.hud_dashboard)    # 1 - HUD Dashboard
+        self.stack.addWidget(self.ai_tools_view)    # 2
+        self.stack.addWidget(self.pomodoro_view)    # 3
+        self.stack.addWidget(self.prompts_view)     # 4
+        self.stack.addWidget(self.reports_view)     # 5
+        self.stack.addWidget(self.settings_view)    # 6
 
         content_layout.addWidget(self.stack)
 
@@ -103,19 +110,19 @@ class MainWindow(QMainWindow):
     def setup_connections(self):
         """Setup signal connections"""
         # Sidebar navigation
-        self.sidebar.navigate_home.connect(lambda: self.navigate_to(0))
-        self.sidebar.navigate_ai_tools.connect(lambda: self.navigate_to(1))
-        self.sidebar.navigate_pomodoro.connect(lambda: self.navigate_to(2))
-        self.sidebar.navigate_prompts.connect(lambda: self.navigate_to(3))
-        self.sidebar.navigate_reports.connect(lambda: self.navigate_to(4))
-        self.sidebar.navigate_settings.connect(lambda: self.navigate_to(5))
+        self.sidebar.navigate_home.connect(lambda: self.navigate_to(1))  # HUD Dashboard by default
+        self.sidebar.navigate_ai_tools.connect(lambda: self.navigate_to(2))
+        self.sidebar.navigate_pomodoro.connect(lambda: self.navigate_to(3))
+        self.sidebar.navigate_prompts.connect(lambda: self.navigate_to(4))
+        self.sidebar.navigate_reports.connect(lambda: self.navigate_to(5))
+        self.sidebar.navigate_settings.connect(lambda: self.navigate_to(6))
 
         # Sidebar mode selection
         self.sidebar.mode_selected.connect(self.launch_mode)
 
         # Dashboard navigation
-        self.dashboard_view.navigate_ai_tools.connect(lambda: self.navigate_to(1))
-        self.dashboard_view.navigate_pomodoro.connect(lambda: self.navigate_to(2))
+        self.dashboard_view.navigate_ai_tools.connect(lambda: self.navigate_to(2))
+        self.dashboard_view.navigate_pomodoro.connect(lambda: self.navigate_to(3))
         self.dashboard_view.mode_selected.connect(self.launch_mode)
 
         # Command bar
@@ -138,7 +145,7 @@ class MainWindow(QMainWindow):
             return
 
         # Navigate to pomodoro view
-        self.navigate_to(2)
+        self.navigate_to(3)
 
         # Set pomodoro duration
         self.pomodoro_engine.set_duration(mode.pomodoro)
@@ -167,12 +174,12 @@ class MainWindow(QMainWindow):
 
         if action == "navigate":
             view_map = {
-                "home": 0,
-                "ai_tools": 1,
-                "pomodoro": 2,
-                "prompts": 3,
-                "reports": 4,
-                "settings": 5
+                "home": 1,  # HUD Dashboard
+                "ai_tools": 2,
+                "pomodoro": 3,
+                "prompts": 4,
+                "reports": 5,
+                "settings": 6
             }
             view = result.get("view")
             if view in view_map:
