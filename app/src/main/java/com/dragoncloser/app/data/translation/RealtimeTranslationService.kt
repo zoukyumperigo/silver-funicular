@@ -8,6 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -69,45 +70,48 @@ class RealtimeTranslationService @Inject constructor(
             currentSession?.send(Frame.Text(json.encodeToString(sessionConfig)))
             Log.d(TAG, "Session configured for translation")
 
-            // Launch coroutine to send audio chunks
-            kotlinx.coroutines.launch {
-                audioFlow.collect { audioChunk ->
-                    try {
-                        // Encode audio to base64
-                        val base64Audio = audioEncoder.encodePCM16ToBase64(audioChunk.data)
+            // Process audio and WebSocket frames concurrently
+            coroutineScope {
+                // Launch coroutine to send audio chunks
+                launch {
+                    audioFlow.collect { audioChunk ->
+                        try {
+                            // Encode audio to base64
+                            val base64Audio = audioEncoder.encodePCM16ToBase64(audioChunk.data)
 
-                        // Send audio chunk via WebSocket
-                        val audioMessage = json.encodeToString(
-                            mapOf(
-                                "type" to "input_audio_buffer.append",
-                                "audio" to base64Audio
+                            // Send audio chunk via WebSocket
+                            val audioMessage = json.encodeToString(
+                                mapOf(
+                                    "type" to "input_audio_buffer.append",
+                                    "audio" to base64Audio
+                                )
                             )
-                        )
-                        currentSession?.send(Frame.Text(audioMessage))
+                            currentSession?.send(Frame.Text(audioMessage))
 
-                        // Emit audio level for UI visualization
-                        emit(TranslationEvent.AudioLevel(audioChunk.audioLevel))
+                            // Emit audio level for UI visualization
+                            emit(TranslationEvent.AudioLevel(audioChunk.audioLevel))
 
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error sending audio chunk", e)
-                    }
-                }
-            }
-
-            // Receive and process translation responses
-            for (frame in currentSession!!.incoming) {
-                when (frame) {
-                    is Frame.Text -> {
-                        val text = frame.readText()
-                        processRealtimeResponse(text, sourceLanguage, targetLanguage, deeplKey)?.let {
-                            emit(it)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error sending audio chunk", e)
                         }
                     }
-                    is Frame.Close -> {
-                        emit(TranslationEvent.Disconnected("WebSocket closed"))
-                        break
+                }
+
+                // Receive and process translation responses
+                for (frame in currentSession!!.incoming) {
+                    when (frame) {
+                        is Frame.Text -> {
+                            val text = frame.readText()
+                            processRealtimeResponse(text, sourceLanguage, targetLanguage, deeplKey)?.let {
+                                emit(it)
+                            }
+                        }
+                        is Frame.Close -> {
+                            emit(TranslationEvent.Disconnected("WebSocket closed"))
+                            break
+                        }
+                        else -> { /* Ignore binary frames */ }
                     }
-                    else -> { /* Ignore binary frames */ }
                 }
             }
 
