@@ -40,16 +40,18 @@ class RealtimeTranslationService @Inject constructor(
         deeplKey: String,
         sourceLanguage: Language = Language.PORTUGUESE,
         targetLanguage: Language = Language.MANDARIN
-    ): Flow<TranslationEvent> = flow {
+    ): Flow<TranslationEvent> = channelFlow {
         try {
             emit(TranslationEvent.Connecting)
 
             // Establish WebSocket connection
-            currentSession = httpClient.webSocketSession {
-                url(OPENAI_REALTIME_URL)
-                header("Authorization", "Bearer $openAiKey")
-                header("OpenAI-Beta", "realtime=v1")
-            }
+            currentSession = httpClient.webSocketSession(
+                urlString = OPENAI_REALTIME_URL,
+                request = {
+                    header("Authorization", "Bearer $openAiKey")
+                    header("OpenAI-Beta", "realtime=v1")
+                }
+            )
 
             emit(TranslationEvent.Connected)
 
@@ -224,7 +226,9 @@ class RealtimeTranslationService @Inject constructor(
 
     fun disconnect() {
         try {
-            currentSession?.cancel()
+            currentSession?.close()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error closing WebSocket session", e)
         } finally {
             currentSession = null
             Log.d(TAG, "Disconnected from translation service")

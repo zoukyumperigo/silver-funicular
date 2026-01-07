@@ -36,12 +36,6 @@ class DeepLTranslationService @Inject constructor(
 
         return try {
             val response = httpClient.post(DEEPL_API_URL) {
-                timeout {
-                    requestTimeoutMillis = TIMEOUT_MS
-                    connectTimeoutMillis = TIMEOUT_MS
-                    socketTimeoutMillis = TIMEOUT_MS
-                }
-
                 header("Authorization", "DeepL-Auth-Key $apiKey")
                 contentType(ContentType.Application.FormUrlEncoded)
 

@@ -20,7 +20,7 @@ import java.util.*
 @Composable
 fun TranslationBubble(translation: Translation) {
     val isSalesRep = translation.speaker == Speaker.SALES_REP
-    val alignment = if (isSalesRep) Alignment.CenterEnd else Alignment.CenterStart
+    val alignment = if (isSalesRep) Alignment.End else Alignment.Start
 
     val bubbleColor = if (isSalesRep) {
         Color(0xFF1976D2)  // Blue for sales rep (Portuguese)

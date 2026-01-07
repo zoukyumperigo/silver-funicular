@@ -63,7 +63,7 @@ class AudioEncoder @Inject constructor() {
         if (sourceSampleRate == targetSampleRate) return pcmData
 
         val ratio = sourceSampleRate.toDouble() / targetSampleRate
-        val outputSize = (pcmData.size / ratio).toInt() and 0xFFFFFFFE // Ensure even number
+        val outputSize = (pcmData.size / ratio).toInt() and 0xFFFFFFFE.toInt() // Ensure even number
 
         val result = ByteArray(outputSize)
         var outputIndex = 0
