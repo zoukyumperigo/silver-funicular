@@ -156,6 +156,7 @@ fun TranslationFeedSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesCoachSection(
     salesHints: List<SalesHint>,
