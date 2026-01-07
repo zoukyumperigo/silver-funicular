@@ -8,7 +8,6 @@ import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -41,9 +40,9 @@ class RealtimeTranslationService @Inject constructor(
         deeplKey: String,
         sourceLanguage: Language = Language.PORTUGUESE,
         targetLanguage: Language = Language.MANDARIN
-    ): Flow<TranslationEvent> = callbackFlow {
+    ): Flow<TranslationEvent> = flow {
         try {
-            send(TranslationEvent.Connecting)
+            emit(TranslationEvent.Connecting)
 
             // Establish WebSocket connection
             currentSession = httpClient.webSocketSession {
@@ -52,7 +51,7 @@ class RealtimeTranslationService @Inject constructor(
                 headers.append("OpenAI-Beta", "realtime=v1")
             }
 
-            send(TranslationEvent.Connected)
+            emit(TranslationEvent.Connected)
 
             // Configure session for translation
             val sessionConfig = SessionConfig(
@@ -71,7 +70,7 @@ class RealtimeTranslationService @Inject constructor(
             Log.d(TAG, "Session configured for translation")
 
             // Launch coroutine to send audio chunks
-            launch(Dispatchers.IO) {
+            kotlinx.coroutines.launch {
                 audioFlow.collect { audioChunk ->
                     try {
                         // Encode audio to base64
@@ -86,8 +85,8 @@ class RealtimeTranslationService @Inject constructor(
                         )
                         currentSession?.send(Frame.Text(audioMessage))
 
-                        // Send audio level for UI visualization
-                        send(TranslationEvent.AudioLevel(audioChunk.audioLevel))
+                        // Emit audio level for UI visualization
+                        emit(TranslationEvent.AudioLevel(audioChunk.audioLevel))
 
                     } catch (e: Exception) {
                         Log.e(TAG, "Error sending audio chunk", e)
@@ -101,11 +100,11 @@ class RealtimeTranslationService @Inject constructor(
                     is Frame.Text -> {
                         val text = frame.readText()
                         processRealtimeResponse(text, sourceLanguage, targetLanguage, deeplKey)?.let {
-                            send(it)
+                            emit(it)
                         }
                     }
                     is Frame.Close -> {
-                        send(TranslationEvent.Disconnected("WebSocket closed"))
+                        emit(TranslationEvent.Disconnected("WebSocket closed"))
                         break
                     }
                     else -> { /* Ignore binary frames */ }
@@ -114,12 +113,8 @@ class RealtimeTranslationService @Inject constructor(
 
         } catch (e: Exception) {
             Log.e(TAG, "Translation service error", e)
-            send(TranslationEvent.Error(e.message ?: "Unknown error"))
+            emit(TranslationEvent.Error(e.message ?: "Unknown error"))
         } finally {
-            disconnect()
-        }
-
-        awaitClose {
             disconnect()
         }
     }.flowOn(Dispatchers.IO)
