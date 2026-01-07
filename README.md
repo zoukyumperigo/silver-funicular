@@ -7,6 +7,8 @@ Clean, accessible drag-and-drop interface for logistics route planning built wit
 ✅ **Drag clients between routes** - Move delivery stops across different routes
 ✅ **Drag routes between days** - Reschedule entire routes to different days
 ✅ **Visual drop indicators** - Clear feedback showing valid drop zones
+✅ **Undo/Redo** - Full history tracking with keyboard shortcuts (Cmd/Ctrl+Z)
+✅ **Predictable state** - Zustand + Immer for immutable updates
 ✅ **Accessible** - Full keyboard navigation and screen reader support
 ✅ **Responsive feedback** - Hover states, drag overlays, and smooth animations
 
@@ -55,12 +57,34 @@ npm run build
 4. Press Space again to drop
 5. Press Escape to cancel
 
+**Undo/Redo**
+- **Cmd/Ctrl + Z** - Undo last action
+- **Cmd/Ctrl + Shift + Z** - Redo
+- **Cmd/Ctrl + Y** - Redo (alternative)
+- Click undo/redo buttons in header
+- Tracks last 50 actions
+
 ## Architecture
+
+### State Management
+
+```
+Zustand Store (useRouteStore)
+├── State: days, drivers, unassignedClients
+├── Actions: moveClient, moveRoute, undo, redo
+└── Middleware: immer (immutability) + undo (history)
+```
+
+**Key Features:**
+- **Predictable updates** - All state changes through actions
+- **Immutability** - Immer handles automatic immutable updates
+- **Undo/Redo** - Custom middleware tracks last 50 actions
+- **Manual control** - No automatic optimizations, user always in control
 
 ### Component Hierarchy
 
 ```
-DndContext (Provider)
+DndContext (Drag Provider)
 └── DragDropRoutePlanner
     ├── DroppableDay (x7 days)
     │   └── DroppableRoute (multiple per day)
@@ -81,14 +105,17 @@ interface Client {
 interface Route {
   id: string;
   driver: string;
+  driverId: string;
   capacity: number;
   boxes: number;
+  status: 'draft' | 'confirmed' | 'in_progress' | 'completed';
   clients: Client[];
 }
 
 interface Day {
   id: string;
   label: string;
+  date: string;
   routes: Route[];
 }
 ```
@@ -185,21 +212,38 @@ DRAG_DROP_DESIGN.md               (detailed design doc)
   "@dnd-kit/core": "^6.1.0",
   "@dnd-kit/sortable": "^8.0.0",
   "@dnd-kit/utilities": "^3.2.2",
-  "lucide-react": "^0.294.0"
+  "immer": "^10.0.3",
+  "lucide-react": "^0.294.0",
+  "zustand": "^4.4.7"
 }
 ```
 
-**Total impact:** ~22KB gzipped (@dnd-kit) + ~15KB (Lucide icons)
+**Bundle Impact:**
+- @dnd-kit: ~22KB gzipped
+- Zustand: ~3KB gzipped
+- Immer: ~14KB gzipped
+- Lucide icons: ~15KB gzipped
+- **Total:** ~54KB gzipped
 
 ## Documentation
 
-See **DRAG_DROP_DESIGN.md** for:
-- Detailed technical decisions
+### **DRAG_DROP_DESIGN.md**
+Detailed drag-and-drop implementation:
+- Technical decisions and rationale
 - Algorithm choices
 - Accessibility features
 - Performance optimizations
 - Testing strategies
 - Future enhancements
+
+### **STATE_MANAGEMENT.md**
+Comprehensive state management guide:
+- Zustand + Immer architecture
+- Undo/redo system implementation
+- Actions and selectors
+- Performance optimization
+- Testing and debugging
+- Migration guide
 
 ---
 

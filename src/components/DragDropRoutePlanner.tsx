@@ -16,107 +16,29 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Calendar, Filter, Zap, MoreVertical, Box, Clock, User, ChevronRight, GripVertical } from 'lucide-react';
+import {
+  Calendar,
+  Filter,
+  Zap,
+  MoreVertical,
+  Box,
+  Clock,
+  User,
+  ChevronRight,
+  GripVertical,
+  Undo2,
+  Redo2,
+} from 'lucide-react';
+import { useRouteStore, selectDayBoxCount } from '../stores/useRouteStore';
+import type { Client, Day, Route } from '../types';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
-interface Client {
-  id: string;
-  name: string;
-  boxes: number;
-  time: string;
-}
-
-interface Route {
-  id: string;
-  driver: string;
-  capacity: number;
-  boxes: number;
-  clients: Client[];
-}
-
-interface Day {
-  id: string;
-  label: string;
-  routes: Route[];
-}
-
 type DragItem =
   | { type: 'client'; clientId: string; routeId: string; dayId: string }
   | { type: 'route'; routeId: string; dayId: string };
-
-// ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const INITIAL_DAYS: Day[] = [
-  {
-    id: 'mon',
-    label: 'Mon 01',
-    routes: [
-      {
-        id: 'r1',
-        driver: 'John Doe',
-        capacity: 85,
-        boxes: 120,
-        clients: [
-          { id: 'c1', name: 'Acme Corp', boxes: 45, time: '09:00' },
-          { id: 'c2', name: 'GlobalTech', boxes: 75, time: '11:30' },
-        ],
-      },
-      {
-        id: 'r2',
-        driver: 'Sarah Smith',
-        capacity: 40,
-        boxes: 50,
-        clients: [{ id: 'c3', name: 'Tech Startups', boxes: 50, time: '10:15' }],
-      },
-    ],
-  },
-  {
-    id: 'tue',
-    label: 'Tue 02',
-    routes: [
-      {
-        id: 'r3',
-        driver: 'Mike Johnson',
-        capacity: 60,
-        boxes: 80,
-        clients: [
-          { id: 'c4', name: 'Beta Industries', boxes: 30, time: '08:00' },
-          { id: 'c5', name: 'Delta Corp', boxes: 50, time: '14:00' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'wed',
-    label: 'Wed 03',
-    routes: [],
-  },
-  {
-    id: 'thu',
-    label: 'Thu 04',
-    routes: [],
-  },
-  {
-    id: 'fri',
-    label: 'Fri 05',
-    routes: [],
-  },
-  {
-    id: 'sat',
-    label: 'Sat 06',
-    routes: [],
-  },
-  {
-    id: 'sun',
-    label: 'Sun 07',
-    routes: [],
-  },
-];
 
 // ============================================================================
 // DRAGGABLE CLIENT CARD
@@ -129,18 +51,17 @@ interface DraggableClientProps {
   onClick: (client: Client) => void;
 }
 
-const DraggableClient: React.FC<DraggableClientProps> = ({ client, routeId, dayId, onClick }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: client.id,
-    data: { type: 'client', clientId: client.id, routeId, dayId } as DragItem,
-  });
+const DraggableClient: React.FC<DraggableClientProps> = ({
+  client,
+  routeId,
+  dayId,
+  onClick,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: client.id,
+      data: { type: 'client', clientId: client.id, routeId, dayId } as DragItem,
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -153,7 +74,9 @@ const DraggableClient: React.FC<DraggableClientProps> = ({ client, routeId, dayI
       ref={setNodeRef}
       style={style}
       className={`group bg-white border-2 p-3 rounded-lg shadow-sm transition-all mb-2 ${
-        isDragging ? 'border-blue-500 shadow-lg' : 'border-slate-200 hover:border-blue-300'
+        isDragging
+          ? 'border-blue-500 shadow-lg'
+          : 'border-slate-200 hover:border-blue-300'
       }`}
     >
       <div className="flex items-start gap-2">
@@ -169,7 +92,9 @@ const DraggableClient: React.FC<DraggableClientProps> = ({ client, routeId, dayI
         {/* Content */}
         <div className="flex-1 min-w-0" onClick={() => onClick(client)}>
           <div className="flex justify-between items-start mb-1">
-            <span className="text-xs font-bold text-slate-700 truncate">{client.name}</span>
+            <span className="text-xs font-bold text-slate-700 truncate">
+              {client.name}
+            </span>
             <MoreVertical size={14} className="text-slate-400" />
           </div>
           <div className="flex items-center gap-3 text-[10px] text-slate-500">
@@ -197,18 +122,17 @@ interface DroppableRouteProps {
   isOver?: boolean;
 }
 
-const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, dayId, onClientClick, isOver }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: route.id,
-    data: { type: 'route', routeId: route.id, dayId } as DragItem,
-  });
+const DroppableRoute: React.FC<DroppableRouteProps> = ({
+  route,
+  dayId,
+  onClientClick,
+  isOver,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: route.id,
+      data: { type: 'route', routeId: route.id, dayId } as DragItem,
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -244,18 +168,29 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, dayId, onClientC
           </h4>
           <div className="w-24 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
             <div
-              className={`h-full transition-all ${route.capacity > 80 ? 'bg-amber-500' : 'bg-blue-500'}`}
-              style={{ width: `${route.capacity}%` }}
+              className={`h-full transition-all ${
+                route.capacity > 80 ? 'bg-amber-500' : 'bg-blue-500'
+              }`}
+              style={{ width: `${Math.min(route.capacity, 100)}%` }}
             />
           </div>
         </div>
 
-        <span className="text-[10px] font-mono font-medium text-slate-500">{route.capacity}%</span>
+        <span className="text-[10px] font-mono font-medium text-slate-500">
+          {route.capacity}%
+        </span>
       </div>
 
       {/* Droppable Client Area */}
-      <SortableContext items={route.clients.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <div className={`space-y-1 min-h-[60px] rounded-md p-2 -m-2 ${isOver ? 'bg-blue-50' : ''}`}>
+      <SortableContext
+        items={route.clients.map((c) => c.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div
+          className={`space-y-1 min-h-[60px] rounded-md p-2 -m-2 ${
+            isOver ? 'bg-blue-50' : ''
+          }`}
+        >
           {route.clients.length === 0 ? (
             <div className="text-center py-4 text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-md">
               Drop clients here
@@ -297,18 +232,24 @@ const DroppableDay: React.FC<DroppableDayProps> = ({ day, onClientClick, isOver 
     data: { type: 'day', dayId: day.id },
   });
 
+  // Use selector for optimized box count calculation
+  const boxCount = useRouteStore(selectDayBoxCount(day.id));
+
   return (
     <div ref={setNodeRef} className="flex-shrink-0 w-80 flex flex-col">
       {/* Day Header */}
       <div className="flex justify-between items-center mb-3 px-1">
         <h3 className="font-bold text-sm text-slate-700">{day.label}</h3>
         <span className="text-[10px] px-2 py-0.5 bg-slate-200 rounded-full font-bold text-slate-500">
-          {day.routes.reduce((sum, r) => sum + r.boxes, 0)} BOXES
+          {boxCount} BOXES
         </span>
       </div>
 
       {/* Route Container */}
-      <SortableContext items={day.routes.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={day.routes.map((r) => r.id)}
+        strategy={verticalListSortingStrategy}
+      >
         <div
           className={`flex-1 overflow-y-auto pr-2 custom-scrollbar rounded-lg p-2 -m-2 transition-colors ${
             isOver ? 'bg-blue-50 border-2 border-dashed border-blue-300' : ''
@@ -342,16 +283,33 @@ const DroppableDay: React.FC<DroppableDayProps> = ({ day, onClientClick, isOver 
 // ============================================================================
 
 export default function DragDropRoutePlanner() {
-  const [days, setDays] = useState<Day[]>(INITIAL_DAYS);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  // State from Zustand store
+  const days = useRouteStore((state) => state.days);
+  const selectedClientId = useRouteStore((state) => state.selectedClientId);
+  const moveClient = useRouteStore((state) => state.moveClient);
+  const moveRoute = useRouteStore((state) => state.moveRoute);
+  const setSelectedClient = useRouteStore((state) => state.setSelectedClient);
+  const undo = useRouteStore((state) => state.undo);
+  const redo = useRouteStore((state) => state.redo);
+  const canUndo = useRouteStore((state) => state.canUndo);
+  const canRedo = useRouteStore((state) => state.canRedo);
+
+  // Local UI state for drag operations
   const [activeItem, setActiveItem] = useState<DragItem | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  // Find selected client details
+  const selectedClient = selectedClientId
+    ? days
+        .flatMap((d) => d.routes.flatMap((r) => r.clients))
+        .find((c) => c.id === selectedClientId)
+    : null;
 
   // Configure sensors for drag detection
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px movement required to start drag (prevents accidental drags)
+        distance: 8, // 8px movement required to start drag
       },
     })
   );
@@ -379,7 +337,7 @@ export default function DragDropRoutePlanner() {
     const overData = over.data.current as any;
 
     // -------------------------------------------------------------------------
-    // CLIENT DRAG: Move client between routes or reorder within route
+    // CLIENT DRAG: Move client between routes
     // -------------------------------------------------------------------------
     if (activeData?.type === 'client') {
       const sourceRouteId = activeData.routeId;
@@ -400,36 +358,15 @@ export default function DragDropRoutePlanner() {
         targetDayId = overData.dayId;
       } else if (over.id === sourceRouteId) {
         // Dropped back on same route
-        targetRouteId = sourceRouteId;
-        targetDayId = sourceDayId;
+        return;
       } else {
         return; // Invalid drop target
       }
 
-      // Update state
-      setDays((prevDays) => {
-        const newDays = JSON.parse(JSON.stringify(prevDays)); // Deep clone
-
-        // Find source route and remove client
-        const sourceDay = newDays.find((d: Day) => d.id === sourceDayId);
-        const sourceRoute = sourceDay?.routes.find((r: Route) => r.id === sourceRouteId);
-        const client = sourceRoute?.clients.find((c: Client) => c.id === clientId);
-
-        if (!client) return prevDays;
-
-        sourceRoute.clients = sourceRoute.clients.filter((c: Client) => c.id !== clientId);
-
-        // Find target route and add client
-        const targetDay = newDays.find((d: Day) => d.id === targetDayId);
-        const targetRoute = targetDay?.routes.find((r: Route) => r.id === targetRouteId);
-
-        if (!targetRoute) return prevDays;
-
-        // Add to end of target route (or implement sorting logic here)
-        targetRoute.clients.push(client);
-
-        return newDays;
-      });
+      // Only move if different route
+      if (sourceRouteId !== targetRouteId || sourceDayId !== targetDayId) {
+        moveClient(clientId, sourceRouteId, sourceDayId, targetRouteId, targetDayId);
+      }
     }
 
     // -------------------------------------------------------------------------
@@ -458,28 +395,34 @@ export default function DragDropRoutePlanner() {
         }
       }
 
-      if (sourceDayId === targetDayId) return; // Same day, no action
+      // Only move if different day
+      if (sourceDayId !== targetDayId) {
+        moveRoute(routeId, sourceDayId, targetDayId);
+      }
+    }
+  };
 
-      // Update state
-      setDays((prevDays) => {
-        const newDays = JSON.parse(JSON.stringify(prevDays)); // Deep clone
+  // ============================================================================
+  // KEYBOARD HANDLERS
+  // ============================================================================
 
-        // Find and remove route from source day
-        const sourceDay = newDays.find((d: Day) => d.id === sourceDayId);
-        const route = sourceDay?.routes.find((r: Route) => r.id === routeId);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Cmd/Ctrl + Z = Undo
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      if (canUndo) undo();
+    }
 
-        if (!route) return prevDays;
+    // Cmd/Ctrl + Shift + Z = Redo
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) {
+      e.preventDefault();
+      if (canRedo) redo();
+    }
 
-        sourceDay.routes = sourceDay.routes.filter((r: Route) => r.id !== routeId);
-
-        // Add route to target day
-        const targetDay = newDays.find((d: Day) => d.id === targetDayId);
-        if (!targetDay) return prevDays;
-
-        targetDay.routes.push(route);
-
-        return newDays;
-      });
+    // Cmd/Ctrl + Y = Redo (alternative)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+      e.preventDefault();
+      if (canRedo) redo();
     }
   };
 
@@ -495,14 +438,19 @@ export default function DragDropRoutePlanner() {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-screen bg-slate-100 text-slate-900 font-sans overflow-hidden">
+      <div
+        className="flex h-screen bg-slate-100 text-slate-900 font-sans overflow-hidden"
+        onKeyDown={handleKeyDown}
+        tabIndex={-1}
+      >
         {/* MAIN CONTENT */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* HEADER */}
           <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
             <div className="flex items-center gap-4">
               <h1 className="font-bold text-lg tracking-tight">
-                RouteFlow <span className="text-slate-400 font-normal">/ Daily Planning</span>
+                RouteFlow{' '}
+                <span className="text-slate-400 font-normal">/ Daily Planning</span>
               </h1>
               <div className="flex items-center bg-slate-100 rounded-md px-3 py-1.5 gap-2 border border-slate-200">
                 <Calendar size={16} className="text-slate-500" />
@@ -511,6 +459,34 @@ export default function DragDropRoutePlanner() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Undo/Redo Buttons */}
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={`flex items-center gap-1 px-2 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  canUndo
+                    ? 'text-slate-600 hover:bg-slate-100'
+                    : 'text-slate-300 cursor-not-allowed'
+                }`}
+                title="Undo (Cmd/Ctrl+Z)"
+              >
+                <Undo2 size={16} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={`flex items-center gap-1 px-2 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  canRedo
+                    ? 'text-slate-600 hover:bg-slate-100'
+                    : 'text-slate-300 cursor-not-allowed'
+                }`}
+                title="Redo (Cmd/Ctrl+Shift+Z)"
+              >
+                <Redo2 size={16} />
+              </button>
+
+              <div className="w-px h-6 bg-slate-200 mx-1" />
+
               <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
                 <Filter size={16} /> Filters
               </button>
@@ -522,12 +498,15 @@ export default function DragDropRoutePlanner() {
 
           {/* PLANNING GRID */}
           <main className="flex-1 overflow-x-auto overflow-y-hidden flex p-4 gap-4">
-            <SortableContext items={days.map((d) => d.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={days.map((d) => d.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {days.map((day) => (
                 <DroppableDay
                   key={day.id}
                   day={day}
-                  onClientClick={setSelectedClient}
+                  onClientClick={(client) => setSelectedClient(client.id)}
                   isOver={overId === day.id}
                 />
               ))}
@@ -557,16 +536,26 @@ export default function DragDropRoutePlanner() {
                   <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
                     Client Name
                   </label>
-                  <p className="text-lg font-bold text-slate-900">{selectedClient.name}</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {selectedClient.name}
+                  </p>
                 </section>
                 <div className="grid grid-cols-2 gap-4">
                   <section className="bg-slate-50 p-3 rounded">
-                    <label className="text-[10px] uppercase text-slate-400 font-bold">Boxes</label>
-                    <p className="text-xl font-mono font-bold text-blue-600">{selectedClient.boxes}</p>
+                    <label className="text-[10px] uppercase text-slate-400 font-bold">
+                      Boxes
+                    </label>
+                    <p className="text-xl font-mono font-bold text-blue-600">
+                      {selectedClient.boxes}
+                    </p>
                   </section>
                   <section className="bg-slate-50 p-3 rounded">
-                    <label className="text-[10px] uppercase text-slate-400 font-bold">Window</label>
-                    <p className="text-xl font-mono font-bold text-slate-700">{selectedClient.time}</p>
+                    <label className="text-[10px] uppercase text-slate-400 font-bold">
+                      Window
+                    </label>
+                    <p className="text-xl font-mono font-bold text-slate-700">
+                      {selectedClient.time}
+                    </p>
                   </section>
                 </div>
                 <section>
@@ -576,6 +565,7 @@ export default function DragDropRoutePlanner() {
                   <textarea
                     className="w-full border border-slate-200 rounded-md p-2 text-sm text-slate-600 h-32 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     placeholder="Add specific instructions here..."
+                    defaultValue={selectedClient.notes || ''}
                   ></textarea>
                 </section>
                 <button className="w-full py-3 bg-slate-900 text-white font-bold rounded-lg mt-auto hover:bg-slate-800 transition-colors">
@@ -592,7 +582,9 @@ export default function DragDropRoutePlanner() {
             <div className="bg-white border-2 border-blue-500 p-3 rounded-lg shadow-2xl w-64 opacity-90">
               <div className="flex items-center gap-2">
                 <GripVertical size={16} className="text-slate-400" />
-                <span className="text-xs font-bold text-slate-700">Dragging client...</span>
+                <span className="text-xs font-bold text-slate-700">
+                  Dragging client...
+                </span>
               </div>
             </div>
           )}
@@ -600,7 +592,9 @@ export default function DragDropRoutePlanner() {
             <div className="bg-slate-50 border-2 border-blue-500 p-3 rounded-lg shadow-2xl w-64 opacity-90">
               <div className="flex items-center gap-2">
                 <GripVertical size={16} className="text-slate-400" />
-                <span className="text-xs font-bold text-slate-700">Dragging route...</span>
+                <span className="text-xs font-bold text-slate-700">
+                  Dragging route...
+                </span>
               </div>
             </div>
           )}
