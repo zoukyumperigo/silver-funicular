@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import { useRouteStore, selectDayBoxCount } from '../stores/useRouteStore';
 import type { Client, Day, Route } from '../types';
+import { OptimizationService, OptimizationResult } from '../services/optimizationService';
+import { OptimizationModal } from './OptimizationModal';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -289,6 +291,7 @@ export default function DragDropRoutePlanner() {
   const moveClient = useRouteStore((state) => state.moveClient);
   const moveRoute = useRouteStore((state) => state.moveRoute);
   const setSelectedClient = useRouteStore((state) => state.setSelectedClient);
+  const applyOptimization = useRouteStore((state) => state.applyOptimization);
   const undo = useRouteStore((state) => state.undo);
   const redo = useRouteStore((state) => state.redo);
   const canUndo = useRouteStore((state) => state.canUndo);
@@ -297,6 +300,12 @@ export default function DragDropRoutePlanner() {
   // Local UI state for drag operations
   const [activeItem, setActiveItem] = useState<DragItem | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  // Optimization modal state
+  const [optimizationModalOpen, setOptimizationModalOpen] = useState(false);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [optimizationLoading, setOptimizationLoading] = useState(false);
+  const [pendingOptimizedDays, setPendingOptimizedDays] = useState<Day[] | null>(null);
 
   // Find selected client details
   const selectedClient = selectedClientId
@@ -427,6 +436,68 @@ export default function DragDropRoutePlanner() {
   };
 
   // ============================================================================
+  // OPTIMIZATION HANDLERS
+  // ============================================================================
+
+  const handleOptimizeClick = async () => {
+    setOptimizationModalOpen(true);
+    setOptimizationLoading(true);
+    setOptimizationResult(null);
+    setPendingOptimizedDays(null);
+
+    try {
+      // Run optimization service
+      const result = await OptimizationService.optimize(days, {
+        mode: 'optimize_all',
+        respectTimeWindows: true,
+        balanceWorkload: true,
+        maxRouteCapacity: 100,
+      });
+
+      setOptimizationResult(result);
+
+      if (result.success && result.optimizedDays) {
+        // Store optimized days for later application
+        setPendingOptimizedDays(result.optimizedDays);
+      }
+    } catch (error) {
+      console.error('Optimization error:', error);
+      setOptimizationResult({
+        success: false,
+        executionTime: 0,
+        changes: [],
+        optimizedDays: days,
+        summary: {
+          totalDistanceBefore: 0,
+          totalDistanceAfter: 0,
+          distanceSaved: 0,
+          savingsPercent: 0,
+          routesOptimized: 0,
+          clientsMoved: 0,
+        },
+      });
+    } finally {
+      setOptimizationLoading(false);
+    }
+  };
+
+  const handleAcceptOptimization = () => {
+    if (pendingOptimizedDays) {
+      // Apply optimization to store (this creates a single undo point)
+      applyOptimization(pendingOptimizedDays);
+    }
+    setOptimizationModalOpen(false);
+    setOptimizationResult(null);
+    setPendingOptimizedDays(null);
+  };
+
+  const handleCancelOptimization = () => {
+    setOptimizationModalOpen(false);
+    setOptimizationResult(null);
+    setPendingOptimizedDays(null);
+  };
+
+  // ============================================================================
   // RENDER
   // ============================================================================
 
@@ -490,7 +561,10 @@ export default function DragDropRoutePlanner() {
               <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
                 <Filter size={16} /> Filters
               </button>
-              <button className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+              <button
+                onClick={handleOptimizeClick}
+                className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+              >
                 <Zap size={16} fill="currentColor" /> Optimize Routes
               </button>
             </div>
@@ -617,6 +691,15 @@ export default function DragDropRoutePlanner() {
           background: #94a3b8;
         }
       `}</style>
+
+      {/* OPTIMIZATION MODAL */}
+      <OptimizationModal
+        isOpen={optimizationModalOpen}
+        result={optimizationResult}
+        isLoading={optimizationLoading}
+        onAccept={handleAcceptOptimization}
+        onCancel={handleCancelOptimization}
+      />
     </DndContext>
   );
 }

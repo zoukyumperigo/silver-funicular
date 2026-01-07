@@ -44,6 +44,9 @@ interface RouteStore {
   // Actions - Data Management
   loadInitialData: (days: Day[], drivers: Driver[], unassigned: Client[]) => void;
 
+  // Actions - Optimization
+  applyOptimization: (optimizedDays: Day[]) => void;
+
   // Undo/Redo (provided by middleware)
   undo: () => void;
   redo: () => void;
@@ -392,6 +395,20 @@ export const useRouteStore = create<RouteStore>()(
           },
           true,
           'loadInitialData'
+        );
+      },
+
+      // ========================================================================
+      // OPTIMIZATION
+      // ========================================================================
+
+      applyOptimization: (optimizedDays) => {
+        set(
+          (state) => {
+            state.days = optimizedDays;
+          },
+          false,
+          'applyOptimization'
         );
       },
 
