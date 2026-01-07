@@ -77,7 +77,7 @@ fun MainContent() {
             )
         }
         else -> {
-            LiveFeedScreen(apiKey = apiConfig.openAiKey)
+            LiveFeedScreen(apiConfig = apiConfig)
         }
     }
 }

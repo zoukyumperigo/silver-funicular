@@ -36,7 +36,8 @@ class RealtimeTranslationService @Inject constructor(
      */
     fun connectAndTranslate(
         audioFlow: Flow<AudioChunk>,
-        apiKey: String,
+        openAiKey: String,
+        deeplKey: String,
         sourceLanguage: Language = Language.PORTUGUESE,
         targetLanguage: Language = Language.MANDARIN
     ): Flow<TranslationEvent> = flow {
@@ -46,7 +47,7 @@ class RealtimeTranslationService @Inject constructor(
             // Establish WebSocket connection
             currentSession = httpClient.webSocketSession {
                 url(OPENAI_REALTIME_URL)
-                header("Authorization", "Bearer $apiKey")
+                header("Authorization", "Bearer $openAiKey")
                 header("OpenAI-Beta", "realtime=v1")
             }
 
@@ -98,7 +99,7 @@ class RealtimeTranslationService @Inject constructor(
                 when (frame) {
                     is Frame.Text -> {
                         val text = frame.readText()
-                        processRealtimeResponse(text, sourceLanguage, targetLanguage)?.let {
+                        processRealtimeResponse(text, sourceLanguage, targetLanguage, deeplKey)?.let {
                             emit(it)
                         }
                     }
@@ -121,10 +122,11 @@ class RealtimeTranslationService @Inject constructor(
     /**
      * Process incoming WebSocket messages from OpenAI Realtime API
      */
-    private fun processRealtimeResponse(
+    private suspend fun processRealtimeResponse(
         responseText: String,
         sourceLanguage: Language,
-        targetLanguage: Language
+        targetLanguage: Language,
+        deeplKey: String
     ): TranslationEvent? {
         return try {
             val response = json.decodeFromString<RealtimeResponse>(responseText)
@@ -139,7 +141,7 @@ class RealtimeTranslationService @Inject constructor(
                         val translation = Translation(
                             id = response.eventId ?: System.currentTimeMillis().toString(),
                             originalText = transcript,
-                            translatedText = translateText(transcript, sourceLanguage, targetLanguage),
+                            translatedText = translateText(transcript, sourceLanguage, targetLanguage, deeplKey),
                             sourceLanguage = sourceLanguage,
                             targetLanguage = targetLanguage,
                             speaker = detectSpeaker(transcript),
@@ -177,8 +179,8 @@ class RealtimeTranslationService @Inject constructor(
      * Translate text using DeepL API
      * Falls back to original text if translation fails (DeepL handles errors internally)
      */
-    private suspend fun translateText(text: String, sourceLanguage: Language, targetLanguage: Language): String {
-        return deepLTranslationService.translate(text, sourceLanguage, targetLanguage)
+    private suspend fun translateText(text: String, sourceLanguage: Language, targetLanguage: Language, deeplKey: String): String {
+        return deepLTranslationService.translate(text, sourceLanguage, targetLanguage, deeplKey)
     }
 
     /**
@@ -221,9 +223,12 @@ class RealtimeTranslationService @Inject constructor(
     }
 
     fun disconnect() {
-        currentSession?.cancel()
-        currentSession = null
-        Log.d(TAG, "Disconnected from translation service")
+        try {
+            currentSession?.cancel()
+        } finally {
+            currentSession = null
+            Log.d(TAG, "Disconnected from translation service")
+        }
     }
 
     fun isConnected(): Boolean = currentSession != null

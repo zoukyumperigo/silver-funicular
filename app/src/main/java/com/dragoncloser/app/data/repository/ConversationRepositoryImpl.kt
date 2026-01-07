@@ -38,7 +38,7 @@ class ConversationRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun startListening(apiKey: String): Flow<ConversationState> = flow {
+    override fun startListening(openAiKey: String, deeplKey: String): Flow<ConversationState> = flow {
         _conversationHistory.value = emptyList()
 
         // Start audio recording
@@ -47,7 +47,8 @@ class ConversationRepositoryImpl @Inject constructor(
         // Connect to translation service
         val translationFlow = translationService.connectAndTranslate(
             audioFlow = audioFlow,
-            apiKey = apiKey
+            openAiKey = openAiKey,
+            deeplKey = deeplKey
         )
 
         // Emit initial state
@@ -79,7 +80,7 @@ class ConversationRepositoryImpl @Inject constructor(
                         val hintResult = salesCoachAgent.analyzeAndSuggest(
                             latestTranscript = event.translation.originalText,
                             conversationHistory = _conversationHistory.value,
-                            apiKey = apiKey
+                            apiKey = openAiKey
                         )
 
                         hintResult.getOrNull()?.let { hints.add(it) }
@@ -136,7 +137,7 @@ class ConversationRepositoryImpl @Inject constructor(
     override suspend fun getSalesHint(transcript: String, apiKey: String): Result<SalesHint> {
         return salesCoachAgent.analyzeAndSuggest(
             latestTranscript = transcript,
-            conversationHistory = conversationHistory,
+            conversationHistory = _conversationHistory.value,
             apiKey = apiKey
         )
     }

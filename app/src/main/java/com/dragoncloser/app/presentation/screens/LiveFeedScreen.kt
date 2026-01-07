@@ -23,7 +23,7 @@ import com.dragoncloser.app.presentation.viewmodel.ConversationViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveFeedScreen(
-    apiKey: String,
+    apiConfig: com.dragoncloser.app.presentation.ApiConfiguration,
     viewModel: ConversationViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -46,7 +46,7 @@ fun LiveFeedScreen(
             ListeningButton(
                 isListening = state.isListening,
                 audioLevel = state.audioLevel,
-                onStartListening = { viewModel.startListening(apiKey) },
+                onStartListening = { viewModel.startListening(apiConfig.openAiKey, apiConfig.deeplKey) },
                 onStopListening = { viewModel.stopListening() }
             )
         }
@@ -82,7 +82,7 @@ fun LiveFeedScreen(
             Snackbar(
                 modifier = Modifier.padding(16.dp),
                 action = {
-                    TextButton(onClick = { viewModel.startListening(apiKey) }) {
+                    TextButton(onClick = { viewModel.startListening(apiConfig.openAiKey, apiConfig.deeplKey) }) {
                         Text("Retry")
                     }
                 }

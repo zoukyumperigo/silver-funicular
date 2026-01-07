@@ -26,9 +26,10 @@ class DeepLTranslationService @Inject constructor(
     suspend fun translate(
         text: String,
         source: Language,
-        target: Language
+        target: Language,
+        apiKey: String
     ): String {
-        if (BuildConfig.DEEPL_API_KEY.isBlank()) {
+        if (apiKey.isBlank()) {
             Log.e(TAG, "DeepL API key missing")
             return text
         }
@@ -41,7 +42,7 @@ class DeepLTranslationService @Inject constructor(
                     socketTimeoutMillis = TIMEOUT_MS
                 }
 
-                header("Authorization", "DeepL-Auth-Key ${BuildConfig.DEEPL_API_KEY}")
+                header("Authorization", "DeepL-Auth-Key $apiKey")
                 contentType(ContentType.Application.FormUrlEncoded)
 
                 setBody(
