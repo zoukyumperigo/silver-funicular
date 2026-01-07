@@ -20,13 +20,26 @@ class ConversationRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TAG = "ConversationRepo"
+        private const val MAX_HISTORY_SIZE = 100
     }
 
-    private val conversationHistory = mutableListOf<Translation>()
+    private val _conversationHistory = MutableStateFlow<List<Translation>>(emptyList())
     private var currentAudioLevel = 0f
 
+    private fun addTranslation(translation: Translation) {
+        _conversationHistory.update { currentList ->
+            val newList = currentList + translation
+            if (newList.size > MAX_HISTORY_SIZE) {
+                Log.w(TAG, "History limit reached, keeping last $MAX_HISTORY_SIZE translations")
+                newList.takeLast(MAX_HISTORY_SIZE)
+            } else {
+                newList
+            }
+        }
+    }
+
     override fun startListening(apiKey: String): Flow<ConversationState> = flow {
-        conversationHistory.clear()
+        _conversationHistory.value = emptyList()
 
         // Start audio recording
         val audioFlow = audioStreamManager.startRecording()
@@ -50,22 +63,22 @@ class ConversationRepositoryImpl @Inject constructor(
                     emit(ConversationState(
                         isListening = true,
                         connectionStatus = ConnectionStatus.CONNECTED,
-                        translations = conversationHistory.toList()
+                        translations = _conversationHistory.value
                     ))
                 }
 
                 is TranslationEvent.TranslationReceived -> {
                     Log.d(TAG, "Translation received: ${event.translation.originalText}")
 
-                    // Add to history
-                    conversationHistory.add(event.translation)
+                    // Add to history (thread-safe atomic update)
+                    addTranslation(event.translation)
 
                     // Get sales hint if this is from restaurant owner
                     val hints = mutableListOf<SalesHint>()
                     if (event.translation.speaker == Speaker.RESTAURANT_OWNER) {
                         val hintResult = salesCoachAgent.analyzeAndSuggest(
                             latestTranscript = event.translation.originalText,
-                            conversationHistory = conversationHistory,
+                            conversationHistory = _conversationHistory.value,
                             apiKey = apiKey
                         )
 
@@ -75,7 +88,7 @@ class ConversationRepositoryImpl @Inject constructor(
                     emit(ConversationState(
                         isListening = true,
                         connectionStatus = ConnectionStatus.CONNECTED,
-                        translations = conversationHistory.toList(),
+                        translations = _conversationHistory.value,
                         salesHints = hints,
                         audioLevel = currentAudioLevel
                     ))
@@ -90,7 +103,7 @@ class ConversationRepositoryImpl @Inject constructor(
                     emit(ConversationState(
                         isListening = false,
                         connectionStatus = ConnectionStatus.ERROR,
-                        translations = conversationHistory.toList(),
+                        translations = _conversationHistory.value,
                         error = event.message
                     ))
                 }
@@ -99,7 +112,7 @@ class ConversationRepositoryImpl @Inject constructor(
                     emit(ConversationState(
                         isListening = false,
                         connectionStatus = ConnectionStatus.DISCONNECTED,
-                        translations = conversationHistory.toList()
+                        translations = _conversationHistory.value
                     ))
                 }
 
