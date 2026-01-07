@@ -19,7 +19,8 @@ import javax.inject.Singleton
 class RealtimeTranslationService @Inject constructor(
     private val httpClient: HttpClient,
     private val audioEncoder: AudioEncoder,
-    private val json: Json
+    private val json: Json,
+    private val deepLTranslationService: DeepLTranslationService
 ) {
     companion object {
         private const val TAG = "RealtimeTranslation"
@@ -134,11 +135,11 @@ class RealtimeTranslationService @Inject constructor(
                         // Original transcription received
                         Log.d(TAG, "Transcription: $transcript")
 
-                        // Create translation (in real implementation, you'd call translation API here)
+                        // Create translation with DeepL
                         val translation = Translation(
                             id = response.eventId ?: System.currentTimeMillis().toString(),
                             originalText = transcript,
-                            translatedText = translateText(transcript, targetLanguage),  // Placeholder
+                            translatedText = translateText(transcript, sourceLanguage, targetLanguage),
                             sourceLanguage = sourceLanguage,
                             targetLanguage = targetLanguage,
                             speaker = detectSpeaker(transcript),
@@ -173,17 +174,11 @@ class RealtimeTranslationService @Inject constructor(
     }
 
     /**
-     * Placeholder for translation logic
-     * In production, integrate with DeepL or Google Translate API
+     * Translate text using DeepL API
+     * Falls back to original text if translation fails (DeepL handles errors internally)
      */
-    private suspend fun translateText(text: String, targetLanguage: Language): String {
-        // TODO: Implement actual translation API call
-        // For now, return placeholder
-        return when (targetLanguage) {
-            Language.MANDARIN -> "[中文翻译] $text"
-            Language.CANTONESE -> "[粵語翻譯] $text"
-            Language.PORTUGUESE -> "[Tradução PT] $text"
-        }
+    private suspend fun translateText(text: String, sourceLanguage: Language, targetLanguage: Language): String {
+        return deepLTranslationService.translate(text, sourceLanguage, targetLanguage)
     }
 
     /**

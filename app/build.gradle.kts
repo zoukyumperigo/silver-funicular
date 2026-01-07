@@ -24,6 +24,7 @@ android {
 
         // API keys (use BuildConfig or local.properties in production)
         buildConfigField("String", "OPENAI_API_KEY", "\"${project.findProperty("OPENAI_API_KEY") ?: ""}\"")
+        buildConfigField("String", "DEEPL_API_KEY", "\"${project.findProperty("DEEPL_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
