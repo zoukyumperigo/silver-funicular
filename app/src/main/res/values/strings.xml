@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dragon Closer</string>
+    <string name="start_listening">Start Listening</string>
+    <string name="stop_listening">Stop Listening</string>
+    <string name="live_translation">Live Translation</string>
+    <string name="sales_coach">AI Sales Coach</string>
+    <string name="microphone_permission_required">Microphone permission is required for real-time translation</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="error_connection">Connection error. Please try again.</string>
+    <string name="sales_rep">Sales Rep</string>
+    <string name="restaurant_owner">Restaurant Owner</string>
+    <string name="intent_analysis">Intent Analysis</string>
+    <string name="suggested_response">Suggested Response</string>
+    <string name="cultural_note">Cultural Note</string>
+    <string name="strategy">Strategy</string>
+</resources>
