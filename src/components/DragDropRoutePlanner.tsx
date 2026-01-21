@@ -195,7 +195,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({
         >
           {route.clients.length === 0 ? (
             <div className="text-center py-4 text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-md">
-              Drop clients here
+              Solte clientes aqui
             </div>
           ) : (
             route.clients.map((client) => (
@@ -212,7 +212,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({
       </SortableContext>
 
       <button className="w-full py-2 mt-2 border-dashed border-2 border-slate-200 rounded text-[10px] text-slate-400 hover:bg-white hover:border-slate-300 transition-colors">
-        + Add Stop
+        + Adicionar Parada
       </button>
     </div>
   );
@@ -243,7 +243,7 @@ const DroppableDay: React.FC<DroppableDayProps> = ({ day, onClientClick, isOver 
       <div className="flex justify-between items-center mb-3 px-1">
         <h3 className="font-bold text-sm text-slate-700">{day.label}</h3>
         <span className="text-[10px] px-2 py-0.5 bg-slate-200 rounded-full font-bold text-slate-500">
-          {boxCount} BOXES
+          {boxCount} CAIXAS
         </span>
       </div>
 
@@ -259,7 +259,7 @@ const DroppableDay: React.FC<DroppableDayProps> = ({ day, onClientClick, isOver 
         >
           {day.routes.length === 0 ? (
             <div className="text-center py-8 text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white">
-              Drop routes here
+              Solte rotas aqui
             </div>
           ) : (
             day.routes.map((route) => (
@@ -272,7 +272,7 @@ const DroppableDay: React.FC<DroppableDayProps> = ({ day, onClientClick, isOver 
             ))
           )}
           <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 text-xs font-bold hover:bg-slate-50 transition-colors mt-2">
-            + Create New Route
+            + Criar Nova Rota
           </button>
         </div>
       </SortableContext>
@@ -521,7 +521,7 @@ export default function DragDropRoutePlanner() {
             <div className="flex items-center gap-4">
               <h1 className="font-bold text-lg tracking-tight">
                 RouteFlow{' '}
-                <span className="text-slate-400 font-normal">/ Daily Planning</span>
+                <span className="text-slate-400 font-normal">/ Planejamento Diário</span>
               </h1>
               <div className="flex items-center bg-slate-100 rounded-md px-3 py-1.5 gap-2 border border-slate-200">
                 <Calendar size={16} className="text-slate-500" />
@@ -539,7 +539,7 @@ export default function DragDropRoutePlanner() {
                     ? 'text-slate-600 hover:bg-slate-100'
                     : 'text-slate-300 cursor-not-allowed'
                 }`}
-                title="Undo (Cmd/Ctrl+Z)"
+                title="Desfazer (Cmd/Ctrl+Z)"
               >
                 <Undo2 size={16} />
               </button>
@@ -551,7 +551,7 @@ export default function DragDropRoutePlanner() {
                     ? 'text-slate-600 hover:bg-slate-100'
                     : 'text-slate-300 cursor-not-allowed'
                 }`}
-                title="Redo (Cmd/Ctrl+Shift+Z)"
+                title="Refazer (Cmd/Ctrl+Shift+Z)"
               >
                 <Redo2 size={16} />
               </button>
@@ -559,13 +559,13 @@ export default function DragDropRoutePlanner() {
               <div className="w-px h-6 bg-slate-200 mx-1" />
 
               <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
-                <Filter size={16} /> Filters
+                <Filter size={16} /> Filtros
               </button>
               <button
                 onClick={handleOptimizeClick}
                 className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
               >
-                <Zap size={16} fill="currentColor" /> Optimize Routes
+                <Zap size={16} fill="currentColor" /> Otimizar Rotas
               </button>
             </div>
           </header>
@@ -597,7 +597,7 @@ export default function DragDropRoutePlanner() {
           {selectedClient && (
             <div className="flex flex-col h-full">
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 className="font-bold text-slate-800">Stop Details</h2>
+                <h2 className="font-bold text-slate-800">Detalhes da Parada</h2>
                 <button
                   onClick={() => setSelectedClient(null)}
                   className="p-1 hover:bg-slate-200 rounded"
@@ -608,7 +608,7 @@ export default function DragDropRoutePlanner() {
               <div className="p-6 space-y-6">
                 <section>
                   <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                    Client Name
+                    Nome do Cliente
                   </label>
                   <p className="text-lg font-bold text-slate-900">
                     {selectedClient.name}
@@ -617,7 +617,7 @@ export default function DragDropRoutePlanner() {
                 <div className="grid grid-cols-2 gap-4">
                   <section className="bg-slate-50 p-3 rounded">
                     <label className="text-[10px] uppercase text-slate-400 font-bold">
-                      Boxes
+                      Caixas
                     </label>
                     <p className="text-xl font-mono font-bold text-blue-600">
                       {selectedClient.boxes}
@@ -625,7 +625,7 @@ export default function DragDropRoutePlanner() {
                   </section>
                   <section className="bg-slate-50 p-3 rounded">
                     <label className="text-[10px] uppercase text-slate-400 font-bold">
-                      Window
+                      Janela
                     </label>
                     <p className="text-xl font-mono font-bold text-slate-700">
                       {selectedClient.time}
@@ -634,16 +634,16 @@ export default function DragDropRoutePlanner() {
                 </div>
                 <section>
                   <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-2">
-                    Delivery Notes
+                    Notas de Entrega
                   </label>
                   <textarea
                     className="w-full border border-slate-200 rounded-md p-2 text-sm text-slate-600 h-32 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="Add specific instructions here..."
+                    placeholder="Adicione instruções específicas aqui..."
                     defaultValue={selectedClient.notes || ''}
                   ></textarea>
                 </section>
                 <button className="w-full py-3 bg-slate-900 text-white font-bold rounded-lg mt-auto hover:bg-slate-800 transition-colors">
-                  Update Stop
+                  Atualizar Parada
                 </button>
               </div>
             </div>
@@ -657,7 +657,7 @@ export default function DragDropRoutePlanner() {
               <div className="flex items-center gap-2">
                 <GripVertical size={16} className="text-slate-400" />
                 <span className="text-xs font-bold text-slate-700">
-                  Dragging client...
+                  Arrastando cliente...
                 </span>
               </div>
             </div>
@@ -667,7 +667,7 @@ export default function DragDropRoutePlanner() {
               <div className="flex items-center gap-2">
                 <GripVertical size={16} className="text-slate-400" />
                 <span className="text-xs font-bold text-slate-700">
-                  Dragging route...
+                  Arrastando rota...
                 </span>
               </div>
             </div>

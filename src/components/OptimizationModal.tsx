@@ -33,16 +33,16 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
-              Route Optimization
+              Otimização de Rotas
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              Review changes before applying
+              Revise as alterações antes de aplicar
             </p>
           </div>
           <button
             onClick={onCancel}
             className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            aria-label="Close"
+            aria-label="Fechar"
           >
             <X size={20} />
           </button>
@@ -54,9 +54,9 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
             // Loading State
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-              <p className="text-slate-600 font-medium">Optimizing routes...</p>
+              <p className="text-slate-600 font-medium">Otimizando rotas...</p>
               <p className="text-sm text-slate-400 mt-1">
-                This may take a few seconds
+                Isso pode levar alguns segundos
               </p>
             </div>
           ) : result?.success ? (
@@ -68,14 +68,14 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingDown size={16} className="text-green-600" />
                     <span className="text-xs font-bold text-green-900 uppercase">
-                      Distance Saved
+                      Distância Economizada
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-green-700">
-                    {result.summary.distanceSaved.toFixed(1)} mi
+                    {result.summary.distanceSaved.toFixed(1)} km
                   </p>
                   <p className="text-xs text-green-600 mt-1">
-                    {result.summary.savingsPercent.toFixed(1)}% reduction
+                    {result.summary.savingsPercent.toFixed(1)}% redução
                   </p>
                 </div>
 
@@ -83,14 +83,14 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Users size={16} className="text-blue-600" />
                     <span className="text-xs font-bold text-blue-900 uppercase">
-                      Routes Optimized
+                      Rotas Otimizadas
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-blue-700">
                     {result.summary.routesOptimized}
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
-                    Sequence improved
+                    Sequência melhorada
                   </p>
                 </div>
 
@@ -98,14 +98,14 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Package size={16} className="text-purple-600" />
                     <span className="text-xs font-bold text-purple-900 uppercase">
-                      Clients Moved
+                      Clientes Movidos
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-purple-700">
                     {result.summary.clientsMoved}
                   </p>
                   <p className="text-xs text-purple-600 mt-1">
-                    Better balanced
+                    Melhor balanceado
                   </p>
                 </div>
 
@@ -113,14 +113,14 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingDown size={16} className="text-slate-600" />
                     <span className="text-xs font-bold text-slate-900 uppercase">
-                      Execution Time
+                      Tempo de Execução
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-slate-700">
                     {(result.executionTime / 1000).toFixed(2)}s
                   </p>
                   <p className="text-xs text-slate-600 mt-1">
-                    Fast optimization
+                    Otimização rápida
                   </p>
                 </div>
               </div>
@@ -129,23 +129,23 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
               <div className="bg-slate-50 rounded-lg p-4">
                 <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-green-600" />
-                  Before vs After
+                  Antes vs Depois
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">
-                      Before
+                      Antes
                     </p>
                     <p className="text-xl font-bold text-slate-700">
-                      {result.summary.totalDistanceBefore.toFixed(1)} miles
+                      {result.summary.totalDistanceBefore.toFixed(1)} km
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">
-                      After
+                      Depois
                     </p>
                     <p className="text-xl font-bold text-green-600">
-                      {result.summary.totalDistanceAfter.toFixed(1)} miles
+                      {result.summary.totalDistanceAfter.toFixed(1)} km
                     </p>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
               {result.changes.length > 0 ? (
                 <div>
                   <h3 className="font-bold text-slate-900 mb-3">
-                    Changes ({result.changes.length})
+                    Alterações ({result.changes.length})
                   </h3>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {result.changes.map((change, idx) => (
@@ -175,19 +175,19 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                             {change.type === 'client_moved' ? (
                               <>
                                 <p className="font-medium text-slate-900">
-                                  Moved{' '}
+                                  Movido{' '}
                                   <span className="text-purple-600">
                                     {change.clientName}
                                   </span>
                                 </p>
                                 <p className="text-slate-500 text-xs mt-0.5">
-                                  From {change.fromRoute} → To {change.toRoute}
+                                  De {change.fromRoute} → Para {change.toRoute}
                                 </p>
                               </>
                             ) : (
                               <>
                                 <p className="font-medium text-slate-900">
-                                  Optimized route sequence
+                                  Sequência da rota otimizada
                                 </p>
                                 <p className="text-slate-500 text-xs mt-0.5">
                                   {change.impact}
@@ -207,8 +207,8 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-700 flex items-center gap-2">
                     <AlertCircle size={16} />
-                    No optimization changes available. Routes are already
-                    optimal or no improvements found.
+                    Nenhuma alteração de otimização disponível. As rotas já estão
+                    otimizadas ou não foram encontradas melhorias.
                   </p>
                 </div>
               )}
@@ -220,11 +220,11 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                 <AlertCircle size={32} className="text-red-600" />
               </div>
               <p className="text-slate-900 font-bold text-lg">
-                Optimization Failed
+                Falha na Otimização
               </p>
               <p className="text-slate-500 text-sm mt-2 text-center max-w-md">
-                An error occurred while optimizing routes. Please try again or
-                contact support if the issue persists.
+                Ocorreu um erro ao otimizar as rotas. Por favor, tente novamente ou
+                entre em contato com o suporte se o problema persistir.
               </p>
             </div>
           )}
@@ -235,10 +235,10 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
           <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
             <div className="text-sm text-slate-600">
               <p className="font-medium">
-                You can undo this optimization after applying
+                Você pode desfazer esta otimização após aplicar
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                Press Cmd/Ctrl+Z to revert changes
+                Pressione Cmd/Ctrl+Z para reverter alterações
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -246,7 +246,7 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                 onClick={onCancel}
                 className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition-colors"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={onAccept}
@@ -257,7 +257,7 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
                     : 'bg-green-600 text-white hover:bg-green-700 shadow-md'
                 }`}
               >
-                Apply Changes
+                Aplicar Alterações
               </button>
             </div>
           </div>
@@ -269,7 +269,7 @@ export const OptimizationModal: React.FC<OptimizationModalProps> = ({
               onClick={onCancel}
               className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors"
             >
-              Close
+              Fechar
             </button>
           </div>
         )}
