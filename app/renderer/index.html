@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>PromoSender - Envio de Promocoes Multicanal</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">PromoSender</h1>
+                <p class="tagline">Promocoes Multicanal</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">&#9776;</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="contacts">
+                    <span class="nav-icon">&#128101;</span>
+                    <span>Contactos</span>
+                </a>
+                <a href="#" class="nav-item" data-section="templates">
+                    <span class="nav-icon">&#128196;</span>
+                    <span>Templates</span>
+                </a>
+                <a href="#" class="nav-item" data-section="send">
+                    <span class="nav-icon">&#9993;</span>
+                    <span>Enviar</span>
+                </a>
+                <a href="#" class="nav-item" data-section="logs">
+                    <span class="nav-icon">&#128202;</span>
+                    <span>Logs</span>
+                </a>
+                <a href="#" class="nav-item" data-section="settings">
+                    <span class="nav-icon">&#9881;</span>
+                    <span>Definicoes</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <div class="status-item">
+                        <span class="status-dot" id="whatsapp-status"></span>
+                        <span>WhatsApp</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot" id="wechat-status"></span>
+                        <span>WeChat</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section active">
+                <div class="section-header">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon email-icon">&#9993;</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-email">0</span>
+                            <span class="stat-label">Emails Enviados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon whatsapp-icon">&#128172;</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-whatsapp">0</span>
+                            <span class="stat-label">WhatsApp Enviados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon wechat-icon">&#128488;</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-wechat">0</span>
+                            <span class="stat-label">WeChat Enviados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon contacts-icon">&#128101;</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-contacts">0</span>
+                            <span class="stat-label">Total Contactos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dashboard-recent">
+                    <h3>Envios Recentes</h3>
+                    <div class="recent-list" id="recent-sends"></div>
+                </div>
+            </section>
+
+            <!-- Contacts Section -->
+            <section id="contacts-section" class="section">
+                <div class="section-header">
+                    <h2>Contactos</h2>
+                    <div class="header-actions">
+                        <input type="text" id="contact-search" class="search-input" placeholder="Pesquisar contactos...">
+                        <button class="btn btn-primary" id="btn-add-contact">+ Novo Contacto</button>
+                        <button class="btn btn-secondary" id="btn-import-contacts">Importar CSV</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="contacts-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-contacts"></th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefone</th>
+                                <th>WeChat ID</th>
+                                <th>Empresa</th>
+                                <th>Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contacts-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Templates Section -->
+            <section id="templates-section" class="section">
+                <div class="section-header">
+                    <h2>Templates</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="btn-add-template">+ Novo Template</button>
+                    </div>
+                </div>
+                <div class="templates-grid" id="templates-grid"></div>
+            </section>
+
+            <!-- Send Section -->
+            <section id="send-section" class="section">
+                <div class="section-header">
+                    <h2>Enviar Promocao</h2>
+                </div>
+                <div class="send-form">
+                    <div class="form-group">
+                        <label>Canal de Envio</label>
+                        <div class="channel-selector">
+                            <button class="channel-btn active" data-channel="email">
+                                <span class="channel-icon">&#9993;</span>
+                                <span>Email</span>
+                            </button>
+                            <button class="channel-btn" data-channel="whatsapp">
+                                <span class="channel-icon">&#128172;</span>
+                                <span>WhatsApp</span>
+                            </button>
+                            <button class="channel-btn" data-channel="wechat">
+                                <span class="channel-icon">&#128488;</span>
+                                <span>WeChat</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="send-template">Template</label>
+                        <select id="send-template" class="form-control"></select>
+                    </div>
+                    <div class="form-group" id="email-subject-group">
+                        <label for="send-subject">Assunto (Email)</label>
+                        <input type="text" id="send-subject" class="form-control" placeholder="Assunto do email">
+                    </div>
+                    <div class="form-group">
+                        <label>Selecionar Contactos</label>
+                        <div class="contacts-selector">
+                            <input type="text" id="send-contact-search" class="search-input" placeholder="Pesquisar contactos...">
+                            <div class="contacts-list" id="send-contacts-list"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Preview</label>
+                        <div class="preview-box" id="send-preview"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary btn-lg" id="btn-send">Enviar Promocao</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section id="logs-section" class="section">
+                <div class="section-header">
+                    <h2>Logs de Envio</h2>
+                    <div class="header-actions">
+                        <select id="log-filter-channel" class="form-control">
+                            <option value="">Todos os Canais</option>
+                            <option value="email">Email</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="wechat">WeChat</option>
+                        </select>
+                        <select id="log-filter-status" class="form-control">
+                            <option value="">Todos os Status</option>
+                            <option value="success">Sucesso</option>
+                            <option value="error">Erro</option>
+                        </select>
+                        <button class="btn btn-secondary" id="btn-clear-logs">Limpar Logs</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Canal</th>
+                                <th>Contacto</th>
+                                <th>Template</th>
+                                <th>Status</th>
+                                <th>Erro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="section">
+                <div class="section-header">
+                    <h2>Definicoes</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-group">
+                        <h3>Configuracao SMTP (Gmail)</h3>
+                        <div class="form-group">
+                            <label for="smtp-host">Servidor SMTP</label>
+                            <input type="text" id="smtp-host" class="form-control" value="smtp.gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtp-port">Porta</label>
+                            <input type="number" id="smtp-port" class="form-control" value="587">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtp-user">Email (Gmail)</label>
+                            <input type="email" id="smtp-user" class="form-control" placeholder="seu.email@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtp-password">Senha de App</label>
+                            <input type="password" id="smtp-password" class="form-control" placeholder="Senha de aplicacao do Gmail">
+                            <small class="help-text">Use uma "Senha de App" do Gmail. Veja: Conta Google > Seguranca > Senhas de app</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="smtp-from-name">Nome do Remetente</label>
+                            <input type="text" id="smtp-from-name" class="form-control" value="PromoSender">
+                        </div>
+                        <button class="btn btn-secondary" id="btn-test-email">Testar Email</button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Configuracao de Delays</h3>
+                        <div class="form-group">
+                            <label for="email-delay">Delay Email (ms)</label>
+                            <input type="number" id="email-delay" class="form-control" value="2000">
+                            <small class="help-text">Tempo de espera entre emails (recomendado: 2000ms)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="whatsapp-delay">Delay WhatsApp (ms)</label>
+                            <input type="number" id="whatsapp-delay" class="form-control" value="5000">
+                            <small class="help-text">Tempo de espera entre mensagens WhatsApp (recomendado: 5000ms)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="wechat-delay">Delay WeChat (ms)</label>
+                            <input type="number" id="wechat-delay" class="form-control" value="5000">
+                            <small class="help-text">Tempo de espera entre mensagens WeChat (recomendado: 5000ms)</small>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Conexoes WhatsApp / WeChat</h3>
+                        <div class="connection-buttons">
+                            <div class="connection-card">
+                                <h4>WhatsApp Web</h4>
+                                <p>Status: <span id="whatsapp-status-text">Desconectado</span></p>
+                                <button class="btn btn-primary" id="btn-connect-whatsapp">Conectar</button>
+                                <button class="btn btn-secondary" id="btn-disconnect-whatsapp" disabled>Desconectar</button>
+                            </div>
+                            <div class="connection-card">
+                                <h4>WeChat Web</h4>
+                                <p>Status: <span id="wechat-status-text">Desconectado</span></p>
+                                <button class="btn btn-primary" id="btn-connect-wechat">Conectar</button>
+                                <button class="btn btn-secondary" id="btn-disconnect-wechat" disabled>Desconectar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="btn-save-settings">Guardar Definicoes</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Contact Form -->
+    <div class="modal" id="contact-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="contact-modal-title">Novo Contacto</h3>
+                <button class="modal-close" data-modal="contact-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="contact-form">
+                    <input type="hidden" id="contact-id">
+                    <div class="form-group">
+                        <label for="contact-name">Nome *</label>
+                        <input type="text" id="contact-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-phone">Telefone</label>
+                        <input type="text" id="contact-phone" class="form-control" placeholder="+351912345678">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-wechat">WeChat ID</label>
+                        <input type="text" id="contact-wechat" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-company">Empresa</label>
+                        <input type="text" id="contact-company" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-tags">Tags (separadas por virgula)</label>
+                        <input type="text" id="contact-tags" class="form-control" placeholder="cliente, vip, newsletter">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-notes">Notas</label>
+                        <textarea id="contact-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal="contact-modal">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-contact">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Template Form -->
+    <div class="modal" id="template-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="template-modal-title">Novo Template</h3>
+                <button class="modal-close" data-modal="template-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="template-form">
+                    <input type="hidden" id="template-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-name">Nome do Template *</label>
+                            <input type="text" id="template-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-channel">Canal *</label>
+                            <select id="template-channel" class="form-control" required>
+                                <option value="email">Email</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="wechat">WeChat</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="template-subject-group">
+                        <label for="template-subject">Assunto (apenas Email)</label>
+                        <input type="text" id="template-subject" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="template-content">Conteudo (Texto) *</label>
+                        <textarea id="template-content" class="form-control" rows="5" required></textarea>
+                        <small class="help-text">Variaveis disponiveis: {{name}}, {{email}}, {{phone}}, {{company}}, {{wechat_id}}</small>
+                    </div>
+                    <div class="form-group" id="template-html-group">
+                        <label for="template-html">Conteudo HTML (apenas Email)</label>
+                        <textarea id="template-html" class="form-control" rows="10"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal="template-modal">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-template">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sending Progress -->
+    <div class="modal" id="progress-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>A Enviar...</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">A preparar envio...</p>
+                </div>
+                <div class="progress-results" id="progress-results"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-close-progress" style="display:none;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
