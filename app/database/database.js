@@ -1,31 +1,74 @@
-const Database = require('better-sqlite3');
+const initSqlJs = require('sql.js');
 const path = require('path');
+const fs = require('fs');
 const { app } = require('electron');
 const { v4: uuidv4 } = require('uuid');
 
 class DatabaseManager {
     constructor() {
         this.db = null;
+        this.dbPath = null;
     }
 
     // Inicializar a base de dados
     async initialize() {
-        const userDataPath = app.getPath('userData');
-        const dbPath = path.join(userDataPath, 'promosender.db');
+        const SQL = await initSqlJs();
 
-        this.db = new Database(dbPath);
-        this.db.pragma('journal_mode = WAL');
+        const userDataPath = app.getPath('userData');
+        this.dbPath = path.join(userDataPath, 'promosender.db');
+
+        // Carregar base de dados existente ou criar nova
+        if (fs.existsSync(this.dbPath)) {
+            const fileBuffer = fs.readFileSync(this.dbPath);
+            this.db = new SQL.Database(fileBuffer);
+        } else {
+            this.db = new SQL.Database();
+        }
 
         this.createTables();
         this.insertDefaultData();
+        this.saveDatabase();
 
-        console.log('Base de dados inicializada em:', dbPath);
+        console.log('Base de dados inicializada em:', this.dbPath);
+    }
+
+    // Guardar base de dados no disco
+    saveDatabase() {
+        if (this.db && this.dbPath) {
+            const data = this.db.export();
+            const buffer = Buffer.from(data);
+            fs.writeFileSync(this.dbPath, buffer);
+        }
+    }
+
+    // Executar query e retornar resultados como array de objetos
+    queryAll(sql, params = []) {
+        const stmt = this.db.prepare(sql);
+        stmt.bind(params);
+        const results = [];
+        while (stmt.step()) {
+            results.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return results;
+    }
+
+    // Executar query e retornar primeiro resultado
+    queryOne(sql, params = []) {
+        const results = this.queryAll(sql, params);
+        return results.length > 0 ? results[0] : null;
+    }
+
+    // Executar statement (INSERT, UPDATE, DELETE)
+    run(sql, params = []) {
+        this.db.run(sql, params);
+        this.saveDatabase();
     }
 
     // Criar tabelas
     createTables() {
         // Tabela de contactos
-        this.db.exec(`
+        this.db.run(`
             CREATE TABLE IF NOT EXISTS contacts (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -41,7 +84,7 @@ class DatabaseManager {
         `);
 
         // Tabela de templates
-        this.db.exec(`
+        this.db.run(`
             CREATE TABLE IF NOT EXISTS templates (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -55,7 +98,7 @@ class DatabaseManager {
         `);
 
         // Tabela de logs de envio
-        this.db.exec(`
+        this.db.run(`
             CREATE TABLE IF NOT EXISTS send_logs (
                 id TEXT PRIMARY KEY,
                 contact_id TEXT,
@@ -70,7 +113,7 @@ class DatabaseManager {
         `);
 
         // Tabela de configuracoes
-        this.db.exec(`
+        this.db.run(`
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
@@ -78,19 +121,17 @@ class DatabaseManager {
         `);
 
         // Indices para melhor performance
-        this.db.exec(`
-            CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
-            CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone);
-            CREATE INDEX IF NOT EXISTS idx_logs_channel ON send_logs(channel);
-            CREATE INDEX IF NOT EXISTS idx_logs_status ON send_logs(status);
-            CREATE INDEX IF NOT EXISTS idx_logs_sent_at ON send_logs(sent_at);
-        `);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_channel ON send_logs(channel)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_status ON send_logs(status)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_sent_at ON send_logs(sent_at)`);
     }
 
     // Inserir dados por defeito
     insertDefaultData() {
         // Verificar se ja existem configuracoes
-        const settingsCount = this.db.prepare('SELECT COUNT(*) as count FROM settings').get();
+        const settingsCount = this.queryOne('SELECT COUNT(*) as count FROM settings');
 
         if (settingsCount.count === 0) {
             const defaultSettings = {
@@ -105,14 +146,13 @@ class DatabaseManager {
                 batch_size: '10'
             };
 
-            const insertSetting = this.db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
             for (const [key, value] of Object.entries(defaultSettings)) {
-                insertSetting.run(key, value);
+                this.db.run('INSERT INTO settings (key, value) VALUES (?, ?)', [key, value]);
             }
         }
 
         // Inserir templates de exemplo se nao existirem
-        const templatesCount = this.db.prepare('SELECT COUNT(*) as count FROM templates').get();
+        const templatesCount = this.queryOne('SELECT COUNT(*) as count FROM templates');
 
         if (templatesCount.count === 0) {
             const defaultTemplates = [
@@ -170,155 +210,102 @@ class DatabaseManager {
                 }
             ];
 
-            const insertTemplate = this.db.prepare(`
-                INSERT INTO templates (id, name, channel, subject, content, html_content)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `);
-
             for (const template of defaultTemplates) {
-                insertTemplate.run(
-                    template.id,
-                    template.name,
-                    template.channel,
-                    template.subject,
-                    template.content,
-                    template.html_content
+                this.db.run(
+                    `INSERT INTO templates (id, name, channel, subject, content, html_content) VALUES (?, ?, ?, ?, ?, ?)`,
+                    [template.id, template.name, template.channel, template.subject, template.content, template.html_content]
                 );
             }
         }
+
+        this.saveDatabase();
     }
 
     // ==================== CRUD CONTACTOS ====================
 
     getAllContacts() {
-        return this.db.prepare('SELECT * FROM contacts ORDER BY name').all();
+        return this.queryAll('SELECT * FROM contacts ORDER BY name');
     }
 
     getContactById(id) {
-        return this.db.prepare('SELECT * FROM contacts WHERE id = ?').get(id);
+        return this.queryOne('SELECT * FROM contacts WHERE id = ?', [id]);
     }
 
     createContact(contact) {
         const id = uuidv4();
-        const stmt = this.db.prepare(`
-            INSERT INTO contacts (id, name, email, phone, wechat_id, company, notes, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            id,
-            contact.name,
-            contact.email || null,
-            contact.phone || null,
-            contact.wechat_id || null,
-            contact.company || null,
-            contact.notes || null,
-            contact.tags || null
+        this.run(
+            `INSERT INTO contacts (id, name, email, phone, wechat_id, company, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, contact.name, contact.email || null, contact.phone || null, contact.wechat_id || null, contact.company || null, contact.notes || null, contact.tags || null]
         );
         return id;
     }
 
     updateContact(id, contact) {
-        const stmt = this.db.prepare(`
-            UPDATE contacts
-            SET name = ?, email = ?, phone = ?, wechat_id = ?, company = ?, notes = ?, tags = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        stmt.run(
-            contact.name,
-            contact.email || null,
-            contact.phone || null,
-            contact.wechat_id || null,
-            contact.company || null,
-            contact.notes || null,
-            contact.tags || null,
-            id
+        this.run(
+            `UPDATE contacts SET name = ?, email = ?, phone = ?, wechat_id = ?, company = ?, notes = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [contact.name, contact.email || null, contact.phone || null, contact.wechat_id || null, contact.company || null, contact.notes || null, contact.tags || null, id]
         );
     }
 
     deleteContact(id) {
-        this.db.prepare('DELETE FROM contacts WHERE id = ?').run(id);
+        this.run('DELETE FROM contacts WHERE id = ?', [id]);
     }
 
     searchContacts(query) {
         const searchQuery = `%${query}%`;
-        return this.db.prepare(`
-            SELECT * FROM contacts
-            WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? OR company LIKE ? OR tags LIKE ?
-            ORDER BY name
-        `).all(searchQuery, searchQuery, searchQuery, searchQuery, searchQuery);
+        return this.queryAll(
+            `SELECT * FROM contacts WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? OR company LIKE ? OR tags LIKE ? ORDER BY name`,
+            [searchQuery, searchQuery, searchQuery, searchQuery, searchQuery]
+        );
     }
 
     getContactsByIds(ids) {
+        if (ids.length === 0) return [];
         const placeholders = ids.map(() => '?').join(',');
-        return this.db.prepare(`SELECT * FROM contacts WHERE id IN (${placeholders})`).all(...ids);
+        return this.queryAll(`SELECT * FROM contacts WHERE id IN (${placeholders})`, ids);
     }
 
     // ==================== CRUD TEMPLATES ====================
 
     getAllTemplates() {
-        return this.db.prepare('SELECT * FROM templates ORDER BY name').all();
+        return this.queryAll('SELECT * FROM templates ORDER BY name');
     }
 
     getTemplateById(id) {
-        return this.db.prepare('SELECT * FROM templates WHERE id = ?').get(id);
+        return this.queryOne('SELECT * FROM templates WHERE id = ?', [id]);
     }
 
     getTemplatesByChannel(channel) {
-        return this.db.prepare('SELECT * FROM templates WHERE channel = ? ORDER BY name').all(channel);
+        return this.queryAll('SELECT * FROM templates WHERE channel = ? ORDER BY name', [channel]);
     }
 
     createTemplate(template) {
         const id = uuidv4();
-        const stmt = this.db.prepare(`
-            INSERT INTO templates (id, name, channel, subject, content, html_content)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            id,
-            template.name,
-            template.channel,
-            template.subject || null,
-            template.content,
-            template.html_content || null
+        this.run(
+            `INSERT INTO templates (id, name, channel, subject, content, html_content) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, template.name, template.channel, template.subject || null, template.content, template.html_content || null]
         );
         return id;
     }
 
     updateTemplate(id, template) {
-        const stmt = this.db.prepare(`
-            UPDATE templates
-            SET name = ?, channel = ?, subject = ?, content = ?, html_content = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        stmt.run(
-            template.name,
-            template.channel,
-            template.subject || null,
-            template.content,
-            template.html_content || null,
-            id
+        this.run(
+            `UPDATE templates SET name = ?, channel = ?, subject = ?, content = ?, html_content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [template.name, template.channel, template.subject || null, template.content, template.html_content || null, id]
         );
     }
 
     deleteTemplate(id) {
-        this.db.prepare('DELETE FROM templates WHERE id = ?').run(id);
+        this.run('DELETE FROM templates WHERE id = ?', [id]);
     }
 
     // ==================== LOGS ====================
 
     createLog(log) {
         const id = uuidv4();
-        const stmt = this.db.prepare(`
-            INSERT INTO send_logs (id, contact_id, template_id, channel, status, error_message)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            id,
-            log.contact_id,
-            log.template_id || null,
-            log.channel,
-            log.status,
-            log.error_message || null
+        this.run(
+            `INSERT INTO send_logs (id, contact_id, template_id, channel, status, error_message) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, log.contact_id, log.template_id || null, log.channel, log.status, log.error_message || null]
         );
         return id;
     }
@@ -360,50 +347,50 @@ class DatabaseManager {
             params.push(filters.limit);
         }
 
-        return this.db.prepare(query).all(...params);
+        return this.queryAll(query, params);
     }
 
     getLogStats() {
         const stats = {};
 
         // Total por canal
-        stats.byChannel = this.db.prepare(`
+        stats.byChannel = this.queryAll(`
             SELECT channel, COUNT(*) as total,
                    SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as error
             FROM send_logs
             GROUP BY channel
-        `).all();
+        `);
 
         // Total hoje
-        stats.today = this.db.prepare(`
+        stats.today = this.queryOne(`
             SELECT COUNT(*) as total,
                    SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as error
             FROM send_logs
             WHERE date(sent_at) = date('now')
-        `).get();
+        `);
 
         // Total geral
-        stats.total = this.db.prepare(`
+        stats.total = this.queryOne(`
             SELECT COUNT(*) as total,
                    SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as error
             FROM send_logs
-        `).get();
+        `);
 
         return stats;
     }
 
     clearLogs() {
-        this.db.prepare('DELETE FROM send_logs').run();
+        this.run('DELETE FROM send_logs');
     }
 
     // ==================== CONFIGURACOES ====================
 
     getSettings() {
         const settings = {};
-        const rows = this.db.prepare('SELECT key, value FROM settings').all();
+        const rows = this.queryAll('SELECT key, value FROM settings');
         for (const row of rows) {
             settings[row.key] = row.value;
         }
@@ -411,20 +398,21 @@ class DatabaseManager {
     }
 
     getSetting(key) {
-        const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+        const row = this.queryOne('SELECT value FROM settings WHERE key = ?', [key]);
         return row ? row.value : null;
     }
 
     updateSettings(settings) {
-        const stmt = this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
         for (const [key, value] of Object.entries(settings)) {
-            stmt.run(key, value);
+            this.db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
         }
+        this.saveDatabase();
     }
 
     // Fechar conexao
     close() {
         if (this.db) {
+            this.saveDatabase();
             this.db.close();
             console.log('Base de dados fechada');
         }

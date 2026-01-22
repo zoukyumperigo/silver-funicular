@@ -15,14 +15,14 @@ Aplicacao desktop **100% gratuita** para envio de promocoes via Email, WhatsApp 
 
 ## Requisitos do Sistema
 
-- Node.js 18+
+- Node.js 18+ (recomendado: Node.js 20 LTS)
 - npm ou yarn
 - Google Chrome (para WhatsApp/WeChat Web)
 - Conta Gmail (para envio de emails)
 
 ## Instalacao
 
-### 1. Clonar/Descarregar o Projeto
+### 1. Navegar para a pasta do projeto
 
 ```bash
 cd app
@@ -34,17 +34,13 @@ cd app
 npm install
 ```
 
-### 3. Reconstruir Modulos Nativos (se necessario)
-
-```bash
-npm run rebuild
-```
-
-### 4. Iniciar a Aplicacao
+### 3. Iniciar a Aplicacao
 
 ```bash
 npm start
 ```
+
+**Nota:** Esta versao usa `sql.js` (SQLite em WebAssembly), que nao requer compilacao nativa. A instalacao deve funcionar sem problemas em Windows, macOS e Linux.
 
 ## Configuracao Inicial
 
@@ -152,18 +148,15 @@ app/
 
 ### Erro ao instalar dependencias
 
-Se tiver erros com `better-sqlite3`:
+A aplicacao usa `sql.js` que nao requer compilacao. Se tiver erros:
 
 ```bash
-# Windows
-npm install --global windows-build-tools
-
-# Linux
-sudo apt-get install build-essential python3
-
-# Depois
-npm run rebuild
+# Limpar cache e reinstalar
+rm -rf node_modules package-lock.json
+npm install
 ```
+
+Se o erro persistir, verifique se tem uma versao compativel do Node.js (18+).
 
 ### Mensagens nao estao a ser enviadas
 
@@ -195,7 +188,7 @@ npm run build:linux
 ## Tecnologias Utilizadas
 
 - **Electron** - Framework desktop
-- **SQLite** (better-sqlite3) - Base de dados local
+- **sql.js** - SQLite em WebAssembly (sem compilacao nativa)
 - **Nodemailer** - Envio de emails
 - **Puppeteer** - Automacao de browser
 - **HTML/CSS/JS** - Interface (sem frameworks)

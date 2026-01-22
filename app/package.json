@@ -22,16 +22,14 @@
   "author": "PromoSender Team",
   "license": "MIT",
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
+    "sql.js": "^1.10.0",
     "nodemailer": "^6.9.8",
-    "puppeteer": "^21.7.0",
-    "electron-store": "^8.1.0",
+    "puppeteer": "^23.0.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
-    "electron-rebuild": "^3.2.9"
+    "electron-builder": "^24.9.1"
   },
   "build": {
     "appId": "com.promosender.app",
