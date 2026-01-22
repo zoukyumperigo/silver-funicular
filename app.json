@@ -26,7 +26,8 @@
       "package": "com.seafoodquest.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-notifications"
@@ -35,6 +36,7 @@
       "eas": {
         "projectId": "seafood-quest"
       }
-    }
+    },
+    "sdkVersion": "51.0.0"
   }
 }
