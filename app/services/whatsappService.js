@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
 const path = require('path');
+const { app } = require('electron');
 
 class WhatsAppService {
     constructor(db) {
@@ -8,6 +10,7 @@ class WhatsAppService {
         this.page = null;
         this.isConnected = false;
         this.isReady = false;
+        this.userDataDir = null;
     }
 
     // Obter status da conexao
@@ -18,22 +21,37 @@ class WhatsAppService {
         };
     }
 
+    // Obter pasta para guardar sessao do WhatsApp
+    getUserDataDir() {
+        if (!this.userDataDir) {
+            const userDataPath = app.getPath('userData');
+            this.userDataDir = path.join(userDataPath, 'whatsapp-session');
+
+            // Criar pasta se nao existir
+            if (!fs.existsSync(this.userDataDir)) {
+                fs.mkdirSync(this.userDataDir, { recursive: true });
+            }
+        }
+        return this.userDataDir;
+    }
+
     // Encontrar executavel do Chrome
     getChromePath() {
         const platform = process.platform;
 
         if (platform === 'win32') {
             const paths = [
+                process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
                 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
                 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-                process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
+                process.env.LOCALAPPDATA + '\\Microsoft\\Edge\\Application\\msedge.exe',
                 'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
                 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
             ];
 
             for (const p of paths) {
                 try {
-                    if (require('fs').existsSync(p)) {
+                    if (p && fs.existsSync(p)) {
                         return p;
                     }
                 } catch (e) {}
@@ -45,7 +63,7 @@ class WhatsAppService {
             ];
             for (const p of paths) {
                 try {
-                    if (require('fs').existsSync(p)) {
+                    if (fs.existsSync(p)) {
                         return p;
                     }
                 } catch (e) {}
@@ -55,41 +73,46 @@ class WhatsAppService {
                 '/usr/bin/google-chrome',
                 '/usr/bin/google-chrome-stable',
                 '/usr/bin/chromium-browser',
-                '/usr/bin/chromium',
-                '/snap/bin/chromium'
+                '/usr/bin/chromium'
             ];
             for (const p of paths) {
                 try {
-                    if (require('fs').existsSync(p)) {
+                    if (fs.existsSync(p)) {
                         return p;
                     }
                 } catch (e) {}
             }
         }
 
-        return null; // Usa o Chromium do Puppeteer
+        return null;
     }
 
     // Conectar ao WhatsApp Web
     async connect() {
         try {
+            // Se ja esta conectado, retornar
+            if (this.browser && this.isConnected) {
+                console.log('WhatsApp Web ja esta conectado');
+                return { success: true };
+            }
+
             console.log('A iniciar WhatsApp Web...');
 
             const chromePath = this.getChromePath();
+            const userDataDir = this.getUserDataDir();
 
             const launchOptions = {
                 headless: false,
                 defaultViewport: null,
+                userDataDir: userDataDir, // Guarda sessao para nao pedir QR sempre
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--disable-gpu',
-                    '--window-size=1200,800',
-                    '--disable-web-security',
-                    '--disable-features=IsolateOrigins,site-per-process'
-                ]
+                    '--disable-blink-features=AutomationControlled',
+                    '--window-size=1200,800'
+                ],
+                ignoreDefaultArgs: ['--enable-automation']
             };
 
             // Usar Chrome do sistema se encontrado
@@ -102,14 +125,24 @@ class WhatsAppService {
 
             this.browser = await puppeteer.launch(launchOptions);
 
-            this.page = await this.browser.newPage();
+            // Lidar com fecho do browser
+            this.browser.on('disconnected', () => {
+                console.log('Browser WhatsApp foi fechado');
+                this.isConnected = false;
+                this.isReady = false;
+                this.browser = null;
+                this.page = null;
+            });
 
-            // User agent mais recente
-            await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36');
+            const pages = await this.browser.pages();
+            this.page = pages[0] || await this.browser.newPage();
 
-            // Permitir notificacoes
-            const context = this.browser.defaultBrowserContext();
-            await context.overridePermissions('https://web.whatsapp.com', ['notifications']);
+            // Esconder que e automacao
+            await this.page.evaluateOnNewDocument(() => {
+                Object.defineProperty(navigator, 'webdriver', { get: () => false });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['pt-PT', 'pt', 'en'] });
+            });
 
             console.log('A abrir WhatsApp Web...');
 
@@ -119,10 +152,10 @@ class WhatsAppService {
             });
 
             this.isConnected = true;
-            console.log('WhatsApp Web aberto. Faca scan do QR code...');
+            console.log('WhatsApp Web aberto. Faca scan do QR code se necessario...');
 
-            // Aguardar login (QR code scan) em background
-            this.waitForLogin();
+            // Verificar login em background
+            this.checkLoginStatus();
 
             return { success: true };
         } catch (error) {
@@ -133,59 +166,57 @@ class WhatsAppService {
         }
     }
 
-    // Aguardar login via QR code
-    async waitForLogin() {
-        try {
-            // Seletores atualizados para detetar login
-            const loginSelectors = [
-                'div[data-testid="chat-list"]',
-                '[data-icon="chat"]',
-                'div[aria-label="Chat list"]',
-                '#pane-side'
-            ];
+    // Verificar status de login periodicamente
+    async checkLoginStatus() {
+        const maxAttempts = 60; // 2 minutos (2s x 60)
+        let attempts = 0;
 
-            // Tentar cada seletor
-            for (const selector of loginSelectors) {
-                try {
-                    await this.page.waitForSelector(selector, { timeout: 5000 });
+        while (attempts < maxAttempts && this.isConnected && this.page) {
+            try {
+                const isLoggedIn = await this.page.evaluate(() => {
+                    // Verificar se existe a lista de chats (indica login completo)
+                    const chatList = document.querySelector('#pane-side') ||
+                                    document.querySelector('[data-testid="chat-list"]') ||
+                                    document.querySelector('[aria-label="Chat list"]');
+                    return chatList !== null;
+                });
+
+                if (isLoggedIn) {
                     this.isReady = true;
                     console.log('WhatsApp Web conectado e pronto!');
                     return;
-                } catch (e) {
-                    // Continuar para proximo seletor
+                }
+            } catch (e) {
+                // Pagina pode ter sido fechada
+                if (e.message.includes('Target closed') || e.message.includes('Session closed')) {
+                    console.log('Sessao WhatsApp foi fechada');
+                    this.isConnected = false;
+                    this.isReady = false;
+                    return;
                 }
             }
 
-            // Se nenhum seletor funcionou, aguardar mais tempo
-            console.log('A aguardar scan do QR code (2 minutos)...');
-
-            await this.page.waitForFunction(() => {
-                // Verifica se existe algum elemento que indica login
-                return document.querySelector('#pane-side') !== null ||
-                       document.querySelector('[data-icon="chat"]') !== null ||
-                       document.querySelector('[data-testid="chat-list"]') !== null;
-            }, { timeout: 120000 });
-
-            this.isReady = true;
-            console.log('WhatsApp Web conectado e pronto!');
-        } catch (error) {
-            console.log('Timeout aguardando login. Pode continuar a usar apos fazer scan do QR.');
-            // Nao marcamos como erro, pois o utilizador pode ainda fazer login
+            attempts++;
+            await this.delay(2000);
         }
+
+        console.log('Timeout aguardando login. Pode continuar a usar apos fazer scan do QR.');
     }
 
-    // Verificar se esta pronto (verificacao mais robusta)
+    // Verificar se esta pronto
     async checkReady() {
         if (!this.page || !this.isConnected) return false;
 
         try {
             const ready = await this.page.evaluate(() => {
-                return document.querySelector('#pane-side') !== null ||
-                       document.querySelector('[data-icon="chat"]') !== null;
+                const chatList = document.querySelector('#pane-side') ||
+                                document.querySelector('[data-testid="chat-list"]');
+                return chatList !== null;
             });
             this.isReady = ready;
             return ready;
         } catch (e) {
+            this.isReady = false;
             return false;
         }
     }
@@ -196,19 +227,19 @@ class WhatsAppService {
             if (this.browser) {
                 await this.browser.close();
             }
-            this.browser = null;
-            this.page = null;
-            this.isConnected = false;
-            this.isReady = false;
-            console.log('WhatsApp Web desconectado');
-            return { success: true };
-        } catch (error) {
-            console.error('Erro ao desconectar WhatsApp:', error.message);
-            throw error;
+        } catch (e) {
+            console.log('Erro ao fechar browser:', e.message);
         }
+
+        this.browser = null;
+        this.page = null;
+        this.isConnected = false;
+        this.isReady = false;
+        console.log('WhatsApp Web desconectado');
+        return { success: true };
     }
 
-    // Fechar (alias para disconnect)
+    // Fechar
     async close() {
         return this.disconnect();
     }
@@ -227,12 +258,12 @@ class WhatsAppService {
     // Enviar mensagem para um contacto
     async sendMessage(contact, message) {
         if (!this.isConnected || !this.page) {
-            throw new Error('WhatsApp Web nao esta conectado');
+            throw new Error('WhatsApp Web nao esta conectado. Clique em Conectar primeiro.');
         }
 
         // Verificar se esta pronto
-        await this.checkReady();
-        if (!this.isReady) {
+        const ready = await this.checkReady();
+        if (!ready) {
             throw new Error('WhatsApp Web nao esta pronto. Faca scan do QR code primeiro.');
         }
 
@@ -240,83 +271,78 @@ class WhatsAppService {
             throw new Error('Contacto nao tem numero de telefone');
         }
 
-        // Formatar numero (remover espacos e caracteres especiais, manter + inicial)
+        // Formatar numero
         let phone = contact.phone.replace(/[\s\-\(\)\.]/g, '');
         if (!phone.startsWith('+')) {
             phone = '+' + phone;
         }
+        // Remover o + para a URL
+        const phoneNumber = phone.replace('+', '');
 
         try {
-            // Navegar para o chat usando URL direta
-            const chatUrl = `https://web.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}`;
+            console.log('A enviar mensagem para:', phone);
 
-            console.log('A abrir chat com:', phone);
-            await this.page.goto(chatUrl, { waitUntil: 'networkidle2', timeout: 45000 });
+            // Usar URL direta do WhatsApp
+            const url = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
 
-            // Aguardar caixa de mensagem (varios seletores possiveis)
-            const inputSelectors = [
-                'div[data-testid="conversation-compose-box-input"]',
-                '[data-action="compose-box"]',
-                'div[contenteditable="true"][data-tab="10"]',
-                'footer div[contenteditable="true"]'
-            ];
+            await this.page.goto(url, {
+                waitUntil: 'networkidle0',
+                timeout: 30000
+            });
 
-            let inputFound = false;
-            for (const selector of inputSelectors) {
-                try {
-                    await this.page.waitForSelector(selector, { timeout: 10000 });
-                    inputFound = true;
-                    break;
-                } catch (e) {}
+            // Aguardar pagina carregar
+            await this.delay(3000);
+
+            // Verificar se numero e valido
+            const hasError = await this.page.evaluate(() => {
+                const errorModal = document.querySelector('[data-testid="popup-contents"]');
+                const bodyText = document.body.innerText.toLowerCase();
+                return errorModal !== null || bodyText.includes('invalid') || bodyText.includes('invalido');
+            });
+
+            if (hasError) {
+                throw new Error('Numero de telefone invalido ou nao encontrado no WhatsApp');
             }
 
-            if (!inputFound) {
-                // Verificar se ha erro de numero invalido
-                const invalidNumber = await this.page.evaluate(() => {
-                    const text = document.body.innerText;
-                    return text.includes('invalid') || text.includes('Phone number shared via url is invalid');
-                });
-
-                if (invalidNumber) {
-                    throw new Error('Numero de telefone invalido');
-                }
-
-                throw new Error('Caixa de mensagem nao encontrada');
-            }
-
-            // Aguardar um pouco para a pagina estabilizar
+            // Aguardar botao de enviar aparecer
             await this.delay(2000);
 
-            // Clicar no botao enviar (varios seletores possiveis)
-            const sendSelectors = [
-                'button[data-testid="compose-btn-send"]',
-                '[data-icon="send"]',
-                'span[data-icon="send"]',
-                'button[aria-label="Send"]'
-            ];
+            // Tentar encontrar e clicar no botao enviar
+            const sent = await this.page.evaluate(() => {
+                // Procurar botao de enviar
+                const sendButton = document.querySelector('[data-testid="send"]') ||
+                                   document.querySelector('[data-icon="send"]') ||
+                                   document.querySelector('span[data-icon="send"]');
 
-            let sent = false;
-            for (const selector of sendSelectors) {
-                try {
-                    const sendButton = await this.page.$(selector);
-                    if (sendButton) {
-                        await sendButton.click();
-                        sent = true;
-                        break;
+                if (sendButton) {
+                    sendButton.click();
+                    return true;
+                }
+
+                // Tentar encontrar o botao pelo aria-label
+                const buttons = document.querySelectorAll('button');
+                for (const btn of buttons) {
+                    if (btn.getAttribute('aria-label')?.toLowerCase().includes('send') ||
+                        btn.getAttribute('aria-label')?.toLowerCase().includes('enviar')) {
+                        btn.click();
+                        return true;
                     }
-                } catch (e) {}
-            }
+                }
+
+                return false;
+            });
 
             if (!sent) {
-                // Tentar pressionar Enter
+                // Tentar pressionar Enter como fallback
                 await this.page.keyboard.press('Enter');
             }
 
-            await this.delay(1500);
+            // Aguardar mensagem ser enviada
+            await this.delay(2000);
 
-            console.log('Mensagem WhatsApp enviada para:', phone);
+            console.log('Mensagem enviada com sucesso para:', phone);
 
-            // Registar log de sucesso
+            // Registar log
             this.db.createLog({
                 contact_id: contact.id,
                 template_id: null,
@@ -326,10 +352,10 @@ class WhatsAppService {
             });
 
             return { success: true };
-        } catch (error) {
-            console.error('Erro ao enviar WhatsApp para:', phone, error.message);
 
-            // Registar log de erro
+        } catch (error) {
+            console.error('Erro ao enviar para', phone, ':', error.message);
+
             this.db.createLog({
                 contact_id: contact.id,
                 template_id: null,
@@ -363,7 +389,6 @@ class WhatsAppService {
         for (let i = 0; i < contacts.length; i++) {
             const contact = contacts[i];
 
-            // Verificar se tem telefone
             if (!contact.phone) {
                 results.error++;
                 results.details.push({
