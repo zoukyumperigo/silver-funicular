@@ -25,6 +25,10 @@
                     <span class="nav-icon">&#128101;</span>
                     <span>Contactos</span>
                 </a>
+                <a href="#" class="nav-item" data-section="groups">
+                    <span class="nav-icon">&#128194;</span>
+                    <span>Grupos</span>
+                </a>
                 <a href="#" class="nav-item" data-section="templates">
                     <span class="nav-icon">&#128196;</span>
                     <span>Templates</span>
@@ -128,6 +132,17 @@
                 </div>
             </section>
 
+            <!-- Groups Section -->
+            <section id="groups-section" class="section">
+                <div class="section-header">
+                    <h2>Grupos</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="btn-add-group">+ Novo Grupo</button>
+                    </div>
+                </div>
+                <div class="groups-grid" id="groups-grid"></div>
+            </section>
+
             <!-- Templates Section -->
             <section id="templates-section" class="section">
                 <div class="section-header">
@@ -169,6 +184,15 @@
                     <div class="form-group" id="email-subject-group">
                         <label for="send-subject">Assunto (Email)</label>
                         <input type="text" id="send-subject" class="form-control" placeholder="Assunto do email">
+                    </div>
+                    <div class="form-group">
+                        <label>Selecionar por Grupo</label>
+                        <div class="group-selector">
+                            <select id="send-group" class="form-control">
+                                <option value="">-- Selecionar grupo --</option>
+                            </select>
+                            <button class="btn btn-secondary" id="btn-select-group" style="margin-left: 10px;">Adicionar Grupo</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Selecionar Contactos</label>
@@ -389,6 +413,61 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-modal="template-modal">Cancelar</button>
                 <button class="btn btn-primary" id="btn-save-template">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Group Form -->
+    <div class="modal" id="group-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="group-modal-title">Novo Grupo</h3>
+                <button class="modal-close" data-modal="group-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="group-form">
+                    <input type="hidden" id="group-id">
+                    <div class="form-group">
+                        <label for="group-name">Nome do Grupo *</label>
+                        <input type="text" id="group-name" class="form-control" required placeholder="Ex: Clientes VIP">
+                    </div>
+                    <div class="form-group">
+                        <label for="group-description">Descricao</label>
+                        <textarea id="group-description" class="form-control" rows="2" placeholder="Descricao opcional do grupo"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="group-color">Cor</label>
+                        <input type="color" id="group-color" class="form-control" value="#667eea" style="height: 40px; padding: 5px;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal="group-modal">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-group">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Group Members -->
+    <div class="modal" id="group-members-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="group-members-title">Membros do Grupo</h3>
+                <button class="modal-close" data-modal="group-members-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="group-members-id">
+                <div class="form-group">
+                    <label>Pesquisar e adicionar contactos:</label>
+                    <input type="text" id="group-member-search" class="search-input" placeholder="Pesquisar contactos...">
+                </div>
+                <div class="group-members-container">
+                    <div class="group-members-list" id="group-members-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal="group-members-modal">Fechar</button>
+                <button class="btn btn-primary" id="btn-save-group-members">Guardar Alteracoes</button>
             </div>
         </div>
     </div>

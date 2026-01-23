@@ -221,6 +221,102 @@ ipcMain.handle('contacts:export', async () => {
     }
 });
 
+// ==================== IPC HANDLERS - GRUPOS ====================
+
+ipcMain.handle('groups:getAll', async () => {
+    try {
+        return { success: true, data: db.getAllGroups() };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:getById', async (event, id) => {
+    try {
+        return { success: true, data: db.getGroupById(id) };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:create', async (event, group) => {
+    try {
+        const id = db.createGroup(group);
+        return { success: true, data: { id } };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:update', async (event, id, group) => {
+    try {
+        db.updateGroup(id, group);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:delete', async (event, id) => {
+    try {
+        db.deleteGroup(id);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:getContacts', async (event, groupId) => {
+    try {
+        return { success: true, data: db.getGroupContacts(groupId) };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:getContactIds', async (event, groupId) => {
+    try {
+        return { success: true, data: db.getGroupContactIds(groupId) };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:addContact', async (event, groupId, contactId) => {
+    try {
+        db.addContactToGroup(groupId, contactId);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:removeContact', async (event, groupId, contactId) => {
+    try {
+        db.removeContactFromGroup(groupId, contactId);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('groups:setContacts', async (event, groupId, contactIds) => {
+    try {
+        db.setGroupContacts(groupId, contactIds);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('contacts:getGroups', async (event, contactId) => {
+    try {
+        return { success: true, data: db.getContactGroups(contactId) };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
 // ==================== IPC HANDLERS - TEMPLATES ====================
 
 ipcMain.handle('templates:getAll', async () => {

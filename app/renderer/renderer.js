@@ -1,6 +1,7 @@
 // ==================== STATE ====================
 let contacts = [];
 let templates = [];
+let groups = [];
 let selectedChannel = 'email';
 let selectedContacts = new Set();
 
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load initial data
     await loadDashboard();
     await loadContacts();
+    await loadGroups();
     await loadTemplates();
     await loadSettings();
     await checkConnectionStatus();
@@ -58,6 +60,9 @@ function showSection(sectionName) {
             break;
         case 'contacts':
             loadContacts();
+            break;
+        case 'groups':
+            loadGroups();
             break;
         case 'templates':
             loadTemplates();
@@ -257,6 +262,26 @@ function setupEventListeners() {
     });
 
     document.getElementById('btn-save-template').addEventListener('click', saveTemplate);
+
+    // Group form
+    document.getElementById('btn-add-group').addEventListener('click', () => {
+        document.getElementById('group-modal-title').textContent = 'Novo Grupo';
+        document.getElementById('group-form').reset();
+        document.getElementById('group-id').value = '';
+        document.getElementById('group-color').value = '#667eea';
+        openModal('group-modal');
+    });
+
+    document.getElementById('btn-save-group').addEventListener('click', saveGroup);
+    document.getElementById('btn-save-group-members').addEventListener('click', saveGroupMembers);
+
+    // Group member search
+    document.getElementById('group-member-search').addEventListener('input', (e) => {
+        filterGroupMembers(e.target.value);
+    });
+
+    // Select group in send section
+    document.getElementById('btn-select-group').addEventListener('click', selectGroupContacts);
 
     // Template channel toggle
     document.getElementById('template-channel').addEventListener('change', (e) => {
@@ -515,10 +540,226 @@ window.deleteTemplate = async function(id) {
     }
 };
 
+// ==================== GROUPS ====================
+async function loadGroups() {
+    try {
+        const result = await window.api.groups.getAll();
+        if (result.success) {
+            groups = result.data;
+            renderGroupsGrid();
+            loadGroupsDropdown();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+    }
+}
+
+function renderGroupsGrid() {
+    const grid = document.getElementById('groups-grid');
+
+    if (groups.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">&#128194;</div>
+                <h4>Nenhum grupo encontrado</h4>
+                <p>Clique em "Novo Grupo" para criar</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = groups.map(group => `
+        <div class="group-card" style="border-left-color: ${group.color || '#667eea'}">
+            <div class="group-card-header">
+                <h4>${escapeHtml(group.name)}</h4>
+                <span class="group-card-count">${group.contact_count || 0} contactos</span>
+            </div>
+            <div class="group-card-description">${escapeHtml(group.description || 'Sem descricao')}</div>
+            <div class="group-card-actions">
+                <button class="btn btn-secondary" onclick="manageGroupMembers('${group.id}')">Membros</button>
+                <button class="btn btn-secondary" onclick="editGroup('${group.id}')">Editar</button>
+                <button class="btn btn-danger" onclick="deleteGroup('${group.id}')">Apagar</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadGroupsDropdown() {
+    const select = document.getElementById('send-group');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Selecionar grupo --</option>';
+    groups.forEach(g => {
+        select.innerHTML += `<option value="${g.id}">${g.name} (${g.contact_count || 0})</option>`;
+    });
+}
+
+async function saveGroup() {
+    const id = document.getElementById('group-id').value;
+    const group = {
+        name: document.getElementById('group-name').value,
+        description: document.getElementById('group-description').value,
+        color: document.getElementById('group-color').value
+    };
+
+    if (!group.name) {
+        showToast('Nome do grupo e obrigatorio', 'error');
+        return;
+    }
+
+    try {
+        let result;
+        if (id) {
+            result = await window.api.groups.update(id, group);
+        } else {
+            result = await window.api.groups.create(group);
+        }
+
+        if (result.success) {
+            showToast(id ? 'Grupo atualizado' : 'Grupo criado', 'success');
+            closeModal('group-modal');
+            loadGroups();
+        } else {
+            showToast(result.error || 'Erro ao guardar', 'error');
+        }
+    } catch (error) {
+        showToast('Erro ao guardar grupo', 'error');
+    }
+}
+
+window.editGroup = async function(id) {
+    const result = await window.api.groups.getById(id);
+    if (result.success && result.data) {
+        const group = result.data;
+        document.getElementById('group-modal-title').textContent = 'Editar Grupo';
+        document.getElementById('group-id').value = group.id;
+        document.getElementById('group-name').value = group.name || '';
+        document.getElementById('group-description').value = group.description || '';
+        document.getElementById('group-color').value = group.color || '#667eea';
+        openModal('group-modal');
+    }
+};
+
+window.deleteGroup = async function(id) {
+    if (confirm('Tem a certeza que deseja apagar este grupo?')) {
+        const result = await window.api.groups.delete(id);
+        if (result.success) {
+            showToast('Grupo apagado', 'success');
+            loadGroups();
+        } else {
+            showToast('Erro ao apagar grupo', 'error');
+        }
+    }
+};
+
+// Variavel para guardar membros selecionados no modal
+let currentGroupMembers = new Set();
+
+window.manageGroupMembers = async function(groupId) {
+    document.getElementById('group-members-id').value = groupId;
+
+    // Buscar grupo
+    const groupResult = await window.api.groups.getById(groupId);
+    if (groupResult.success) {
+        document.getElementById('group-members-title').textContent = `Membros: ${groupResult.data.name}`;
+    }
+
+    // Buscar membros actuais
+    const membersResult = await window.api.groups.getContactIds(groupId);
+    currentGroupMembers = new Set(membersResult.success ? membersResult.data : []);
+
+    // Renderizar lista de contactos
+    renderGroupMembersList();
+    openModal('group-members-modal');
+};
+
+function renderGroupMembersList() {
+    const list = document.getElementById('group-members-list');
+
+    list.innerHTML = contacts.map(contact => `
+        <div class="group-member-item" onclick="toggleGroupMember('${contact.id}')">
+            <input type="checkbox" class="group-member-cb" data-id="${contact.id}" ${currentGroupMembers.has(contact.id) ? 'checked' : ''}>
+            <div class="group-member-info">
+                <div class="group-member-name">${escapeHtml(contact.name)}</div>
+                <div class="group-member-detail">${contact.email || ''} ${contact.phone ? '| ' + contact.phone : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.toggleGroupMember = function(contactId) {
+    if (currentGroupMembers.has(contactId)) {
+        currentGroupMembers.delete(contactId);
+    } else {
+        currentGroupMembers.add(contactId);
+    }
+
+    // Atualizar checkbox
+    const cb = document.querySelector(`.group-member-cb[data-id="${contactId}"]`);
+    if (cb) cb.checked = currentGroupMembers.has(contactId);
+};
+
+function filterGroupMembers(query) {
+    const items = document.querySelectorAll('#group-members-list .group-member-item');
+    const lowerQuery = query.toLowerCase();
+
+    items.forEach(item => {
+        const name = item.querySelector('.group-member-name').textContent.toLowerCase();
+        const detail = item.querySelector('.group-member-detail').textContent.toLowerCase();
+        const matches = name.includes(lowerQuery) || detail.includes(lowerQuery);
+        item.style.display = matches ? 'flex' : 'none';
+    });
+}
+
+async function saveGroupMembers() {
+    const groupId = document.getElementById('group-members-id').value;
+    const contactIds = Array.from(currentGroupMembers);
+
+    try {
+        const result = await window.api.groups.setContacts(groupId, contactIds);
+        if (result.success) {
+            showToast('Membros do grupo atualizados', 'success');
+            closeModal('group-members-modal');
+            loadGroups();
+        } else {
+            showToast('Erro ao guardar membros', 'error');
+        }
+    } catch (error) {
+        showToast('Erro ao guardar membros', 'error');
+    }
+}
+
+async function selectGroupContacts() {
+    const groupId = document.getElementById('send-group').value;
+    if (!groupId) {
+        showToast('Selecione um grupo primeiro', 'warning');
+        return;
+    }
+
+    try {
+        const result = await window.api.groups.getContactIds(groupId);
+        if (result.success) {
+            const groupContactIds = result.data;
+
+            // Selecionar todos os contactos do grupo
+            document.querySelectorAll('.send-contact-cb').forEach(cb => {
+                if (groupContactIds.includes(cb.dataset.id)) {
+                    cb.checked = true;
+                }
+            });
+
+            showToast(`${groupContactIds.length} contactos do grupo selecionados`, 'success');
+        }
+    } catch (error) {
+        showToast('Erro ao selecionar contactos do grupo', 'error');
+    }
+}
+
 // ==================== SEND SECTION ====================
 async function loadSendSection() {
     await loadTemplatesForChannel(selectedChannel);
     await loadContactsForSend();
+    loadGroupsDropdown();
 }
 
 async function loadTemplatesForChannel(channel) {

@@ -11,7 +11,22 @@ contextBridge.exposeInMainWorld('api', {
         delete: (id) => ipcRenderer.invoke('contacts:delete', id),
         search: (query) => ipcRenderer.invoke('contacts:search', query),
         import: (contacts) => ipcRenderer.invoke('contacts:import', contacts),
-        export: () => ipcRenderer.invoke('contacts:export')
+        export: () => ipcRenderer.invoke('contacts:export'),
+        getGroups: (contactId) => ipcRenderer.invoke('contacts:getGroups', contactId)
+    },
+
+    // ==================== GRUPOS ====================
+    groups: {
+        getAll: () => ipcRenderer.invoke('groups:getAll'),
+        getById: (id) => ipcRenderer.invoke('groups:getById', id),
+        create: (group) => ipcRenderer.invoke('groups:create', group),
+        update: (id, group) => ipcRenderer.invoke('groups:update', id, group),
+        delete: (id) => ipcRenderer.invoke('groups:delete', id),
+        getContacts: (groupId) => ipcRenderer.invoke('groups:getContacts', groupId),
+        getContactIds: (groupId) => ipcRenderer.invoke('groups:getContactIds', groupId),
+        addContact: (groupId, contactId) => ipcRenderer.invoke('groups:addContact', groupId, contactId),
+        removeContact: (groupId, contactId) => ipcRenderer.invoke('groups:removeContact', groupId, contactId),
+        setContacts: (groupId, contactIds) => ipcRenderer.invoke('groups:setContacts', groupId, contactIds)
     },
 
     // ==================== TEMPLATES ====================

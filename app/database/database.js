@@ -120,12 +120,38 @@ class DatabaseManager {
             )
         `);
 
+        // Tabela de grupos
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS groups (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                color TEXT DEFAULT '#667eea',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Tabela de relacao grupos-contactos (muitos para muitos)
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS group_contacts (
+                group_id TEXT NOT NULL,
+                contact_id TEXT NOT NULL,
+                added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (group_id, contact_id),
+                FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+                FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+            )
+        `);
+
         // Indices para melhor performance
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_channel ON send_logs(channel)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_status ON send_logs(status)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_logs_sent_at ON send_logs(sent_at)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_group_contacts_group ON group_contacts(group_id)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_group_contacts_contact ON group_contacts(contact_id)`);
     }
 
     // Inserir dados por defeito
@@ -263,6 +289,112 @@ class DatabaseManager {
         if (ids.length === 0) return [];
         const placeholders = ids.map(() => '?').join(',');
         return this.queryAll(`SELECT * FROM contacts WHERE id IN (${placeholders})`, ids);
+    }
+
+    // ==================== CRUD GRUPOS ====================
+
+    getAllGroups() {
+        const groups = this.queryAll('SELECT * FROM groups ORDER BY name');
+        // Adicionar contagem de contactos para cada grupo
+        for (const group of groups) {
+            const count = this.queryOne('SELECT COUNT(*) as count FROM group_contacts WHERE group_id = ?', [group.id]);
+            group.contact_count = count ? count.count : 0;
+        }
+        return groups;
+    }
+
+    getGroupById(id) {
+        const group = this.queryOne('SELECT * FROM groups WHERE id = ?', [id]);
+        if (group) {
+            const count = this.queryOne('SELECT COUNT(*) as count FROM group_contacts WHERE group_id = ?', [id]);
+            group.contact_count = count ? count.count : 0;
+        }
+        return group;
+    }
+
+    createGroup(group) {
+        const id = uuidv4();
+        this.run(
+            `INSERT INTO groups (id, name, description, color) VALUES (?, ?, ?, ?)`,
+            [id, group.name, group.description || null, group.color || '#667eea']
+        );
+        return id;
+    }
+
+    updateGroup(id, group) {
+        this.run(
+            `UPDATE groups SET name = ?, description = ?, color = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [group.name, group.description || null, group.color || '#667eea', id]
+        );
+    }
+
+    deleteGroup(id) {
+        // Primeiro remove as relacoes
+        this.run('DELETE FROM group_contacts WHERE group_id = ?', [id]);
+        // Depois remove o grupo
+        this.run('DELETE FROM groups WHERE id = ?', [id]);
+    }
+
+    // Obter contactos de um grupo
+    getGroupContacts(groupId) {
+        return this.queryAll(`
+            SELECT c.* FROM contacts c
+            INNER JOIN group_contacts gc ON c.id = gc.contact_id
+            WHERE gc.group_id = ?
+            ORDER BY c.name
+        `, [groupId]);
+    }
+
+    // Obter IDs dos contactos de um grupo
+    getGroupContactIds(groupId) {
+        const rows = this.queryAll('SELECT contact_id FROM group_contacts WHERE group_id = ?', [groupId]);
+        return rows.map(r => r.contact_id);
+    }
+
+    // Adicionar contacto a um grupo
+    addContactToGroup(groupId, contactId) {
+        try {
+            this.run(
+                'INSERT OR IGNORE INTO group_contacts (group_id, contact_id) VALUES (?, ?)',
+                [groupId, contactId]
+            );
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Remover contacto de um grupo
+    removeContactFromGroup(groupId, contactId) {
+        this.run('DELETE FROM group_contacts WHERE group_id = ? AND contact_id = ?', [groupId, contactId]);
+    }
+
+    // Adicionar multiplos contactos a um grupo
+    addContactsToGroup(groupId, contactIds) {
+        for (const contactId of contactIds) {
+            this.addContactToGroup(groupId, contactId);
+        }
+    }
+
+    // Definir contactos de um grupo (substitui todos)
+    setGroupContacts(groupId, contactIds) {
+        // Remover todos os contactos actuais
+        this.run('DELETE FROM group_contacts WHERE group_id = ?', [groupId]);
+        // Adicionar novos contactos
+        for (const contactId of contactIds) {
+            this.db.run('INSERT INTO group_contacts (group_id, contact_id) VALUES (?, ?)', [groupId, contactId]);
+        }
+        this.saveDatabase();
+    }
+
+    // Obter grupos de um contacto
+    getContactGroups(contactId) {
+        return this.queryAll(`
+            SELECT g.* FROM groups g
+            INNER JOIN group_contacts gc ON g.id = gc.group_id
+            WHERE gc.contact_id = ?
+            ORDER BY g.name
+        `, [contactId]);
     }
 
     // ==================== CRUD TEMPLATES ====================
