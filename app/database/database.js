@@ -92,10 +92,18 @@ class DatabaseManager {
                 subject TEXT,
                 content TEXT NOT NULL,
                 html_content TEXT,
+                image_path TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Migrar tabela templates se necessario (adicionar coluna image_path)
+        try {
+            this.db.run('ALTER TABLE templates ADD COLUMN image_path TEXT');
+        } catch (e) {
+            // Coluna ja existe, ignorar
+        }
 
         // Tabela de logs de envio
         this.db.run(`
@@ -414,16 +422,16 @@ class DatabaseManager {
     createTemplate(template) {
         const id = uuidv4();
         this.run(
-            `INSERT INTO templates (id, name, channel, subject, content, html_content) VALUES (?, ?, ?, ?, ?, ?)`,
-            [id, template.name, template.channel, template.subject || null, template.content, template.html_content || null]
+            `INSERT INTO templates (id, name, channel, subject, content, html_content, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [id, template.name, template.channel, template.subject || null, template.content, template.html_content || null, template.image_path || null]
         );
         return id;
     }
 
     updateTemplate(id, template) {
         this.run(
-            `UPDATE templates SET name = ?, channel = ?, subject = ?, content = ?, html_content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-            [template.name, template.channel, template.subject || null, template.content, template.html_content || null, id]
+            `UPDATE templates SET name = ?, channel = ?, subject = ?, content = ?, html_content = ?, image_path = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [template.name, template.channel, template.subject || null, template.content, template.html_content || null, template.image_path || null, id]
         );
     }
 
