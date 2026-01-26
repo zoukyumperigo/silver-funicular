@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Contador de Caixas</string>
+    <string name="camera_permission_required">Permissão da câmara necessária</string>
+    <string name="permission_denied">Permissão negada. A aplicação necessita de acesso à câmara para funcionar.</string>
+    <string name="box_count">Caixas: %d</string>
+    <string name="capture_button">Capturar</string>
+    <string name="reset_button">Reiniciar</string>
+    <string name="scanning">A analisar...</string>
+    <string name="point_camera">Aponte a câmara para a palete</string>
+</resources>
