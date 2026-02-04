@@ -144,6 +144,7 @@ function renderClients() {
             <span class="favorite-star ${client.favorite ? 'active' : ''}" data-id="${client.id}">⭐</span>
             <div class="name">${typeIcon ? `<span class="type-badge">${typeIcon}</span>` : ''}${escapeHtml(client.name)}${reminderBadge}</div>
             ${client.phone ? `<div class="phone">${escapeHtml(client.phone)}</div>` : ''}
+            ${client.location ? `<div class="location">📍 ${escapeHtml(client.location)}</div>` : ''}
             <span class="status-badge ${client.status}">${getStatusLabel(client.status)}</span>
             ${client.notes ? `<div class="notes-preview">${escapeHtml(client.notes)}</div>` : ''}
             ${phone ? `
@@ -376,6 +377,7 @@ function openEditModal(id) {
     document.getElementById('client-id').value = client.id;
     document.getElementById('name').value = client.name;
     document.getElementById('phone').value = client.phone || '';
+    document.getElementById('location').value = client.location || '';
     document.getElementById('notes').value = client.notes || '';
 
     // Status buttons
@@ -452,6 +454,7 @@ function saveClient(e) {
 
     const name = document.getElementById('name').value.trim();
     const phone = document.getElementById('phone').value.trim();
+    const location = document.getElementById('location').value.trim();
     const notes = document.getElementById('notes').value.trim();
     const status = getSelectedStatus();
     const clientType = selectedType;
@@ -502,6 +505,7 @@ function saveClient(e) {
                 ...clients[index],
                 name,
                 phone,
+                location,
                 notes,
                 status,
                 clientType: clientType || clients[index].clientType,
@@ -527,6 +531,7 @@ function saveClient(e) {
             id: generateId(),
             name,
             phone,
+            location,
             notes,
             status,
             clientType,
@@ -573,10 +578,11 @@ function exportToCSV() {
         return;
     }
 
-    const headers = ['Nome', 'Telefone', 'Tipo', 'Estado', 'Notas', 'Favorito', 'Lembrete', 'Criado em'];
+    const headers = ['Nome', 'Telefone', 'Localização', 'Tipo', 'Estado', 'Notas', 'Favorito', 'Lembrete', 'Criado em'];
     const rows = clients.map(c => [
         c.name,
         c.phone || '',
+        c.location || '',
         getTypeLabel(c.clientType) || '',
         getStatusLabel(c.status),
         c.notes || '',
@@ -770,6 +776,7 @@ if (clients.length === 0) {
             id: generateId(),
             name: 'Restaurante Dragão de Ouro',
             phone: '912 345 678',
+            location: 'Rua Augusta, Lisboa',
             notes: 'Interessado em fornecimento semanal',
             status: 'novo',
             clientType: 'chines',
@@ -783,6 +790,7 @@ if (clients.length === 0) {
             id: generateId(),
             name: 'Casa do Arroz',
             phone: '963 852 741',
+            location: 'Almada',
             notes: 'Ligou ontem, enviar proposta',
             status: 'contacto',
             clientType: 'chines',
@@ -799,6 +807,7 @@ if (clients.length === 0) {
             id: generateId(),
             name: 'Distribuidora Lisboa',
             phone: '939 147 258',
+            location: 'Zona Industrial, Sintra',
             notes: 'Fechou contrato mensal',
             status: 'fechado',
             clientType: 'revendedor',
