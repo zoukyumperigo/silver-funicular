@@ -15,12 +15,17 @@
     <!-- Ecrã Principal: Lista de Clientes -->
     <div id="app">
         <header>
-            <h1>CRM de Bolso</h1>
+            <div class="header-top">
+                <h1>CRM de Bolso</h1>
+                <button id="export-btn" class="header-action" aria-label="Exportar">📥</button>
+            </div>
             <div class="search-box">
                 <input type="text" id="search" placeholder="Pesquisar..." autocomplete="off">
             </div>
             <div class="filters">
                 <button class="filter active" data-filter="all">Todos</button>
+                <button class="filter" data-filter="favoritos">⭐</button>
+                <button class="filter" data-filter="pendentes">🔔</button>
                 <button class="filter" data-filter="novo">Novo</button>
                 <button class="filter" data-filter="contacto">Em contacto</button>
                 <button class="filter" data-filter="fechado">Fechado</button>
@@ -66,6 +71,18 @@
                 <div class="field">
                     <label for="notes">Notas</label>
                     <textarea id="notes" rows="3" placeholder="Notas rápidas..."></textarea>
+                </div>
+
+                <div class="field">
+                    <label>Lembrete</label>
+                    <div class="reminder-selector">
+                        <button type="button" class="reminder-btn" data-reminder="none">Nenhum</button>
+                        <button type="button" class="reminder-btn" data-reminder="today">Hoje 18h</button>
+                        <button type="button" class="reminder-btn" data-reminder="tomorrow">Amanhã 9h</button>
+                        <button type="button" class="reminder-btn" data-reminder="3days">3 dias</button>
+                        <button type="button" class="reminder-btn" data-reminder="week">1 semana</button>
+                    </div>
+                    <div id="reminder-info" class="reminder-info hidden"></div>
                 </div>
 
                 <div class="field" id="history-section" style="display: none;">

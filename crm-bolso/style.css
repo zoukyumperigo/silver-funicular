@@ -48,11 +48,35 @@ header {
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
 header h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 12px;
     letter-spacing: -0.5px;
+}
+
+.header-action {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-card);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+}
+
+.header-action:active {
+    transform: scale(0.9);
 }
 
 .search-box {
@@ -113,6 +137,8 @@ header h1 {
 .filter[data-filter="novo"].active { background: var(--novo); }
 .filter[data-filter="contacto"].active { background: var(--contacto); }
 .filter[data-filter="fechado"].active { background: var(--fechado); }
+.filter[data-filter="favoritos"].active { background: #fbbf24; color: #1a1a2e; }
+.filter[data-filter="pendentes"].active { background: #f472b6; }
 
 /* ================================
    Lista de Clientes
@@ -198,6 +224,86 @@ main {
 .client-card .call-btn:active {
     transform: translateY(-50%) scale(0.9);
     background: #3651d4;
+}
+
+/* Ações rápidas */
+.quick-actions {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+}
+
+.action-btn:active {
+    transform: scale(0.85);
+}
+
+.action-btn.call { background: var(--accent); }
+.action-btn.whatsapp { background: #25d366; }
+.action-btn.sms { background: #8b5cf6; }
+
+/* Estrela favorito */
+.favorite-star {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 1.2rem;
+    opacity: 0.3;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 10;
+}
+
+.favorite-star:active {
+    transform: scale(1.2);
+}
+
+.favorite-star.active {
+    opacity: 1;
+}
+
+.client-card.is-favorite {
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.3);
+}
+
+/* Badge de lembrete */
+.reminder-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(244, 114, 182, 0.2);
+    color: #f472b6;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.reminder-badge.overdue {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 /* Estado vazio */
@@ -377,6 +483,50 @@ main {
     border-color: var(--fechado);
     background: rgba(6, 214, 160, 0.15);
     color: var(--fechado);
+}
+
+/* Seletor de Lembretes */
+.reminder-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reminder-btn {
+    padding: 10px 12px;
+    border: 2px solid var(--bg-card);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reminder-btn.active {
+    border-color: #f472b6;
+    background: rgba(244, 114, 182, 0.15);
+    color: #f472b6;
+}
+
+.reminder-btn[data-reminder="none"].active {
+    border-color: var(--text-muted);
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.reminder-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(244, 114, 182, 0.1);
+    color: #f472b6;
+    font-size: 0.85rem;
+}
+
+.reminder-info.hidden {
+    display: none;
 }
 
 /* Histórico */
