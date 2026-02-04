@@ -139,6 +139,8 @@ header h1 {
 .filter[data-filter="fechado"].active { background: var(--fechado); }
 .filter[data-filter="favoritos"].active { background: #fbbf24; color: #1a1a2e; }
 .filter[data-filter="pendentes"].active { background: #f472b6; }
+.filter[data-filter="chines"].active { background: #ef4444; }
+.filter[data-filter="revendedor"].active { background: #8b5cf6; }
 
 /* ================================
    Lista de Clientes
@@ -483,6 +485,45 @@ main {
     border-color: var(--fechado);
     background: rgba(6, 214, 160, 0.15);
     color: var(--fechado);
+}
+
+/* Seletor de Tipo */
+.type-selector {
+    display: flex;
+    gap: 8px;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: 2px solid var(--bg-card);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.type-btn[data-type="chines"].active {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.type-btn[data-type="revendedor"].active {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+/* Badge de tipo no card */
+.type-badge {
+    display: inline-block;
+    font-size: 1rem;
+    margin-right: 6px;
+    vertical-align: middle;
 }
 
 /* Seletor de Lembretes */

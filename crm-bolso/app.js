@@ -12,6 +12,7 @@ let clients = [];
 let currentFilter = 'all';
 let editingId = null;
 let selectedReminder = 'none';
+let selectedType = null;
 
 // Elementos DOM
 const clientList = document.getElementById('client-list');
@@ -24,6 +25,7 @@ const closeModalBtn = document.getElementById('close-modal');
 const deleteBtn = document.getElementById('delete-btn');
 const filterBtns = document.querySelectorAll('.filter');
 const statusBtns = document.querySelectorAll('.status-btn');
+const typeBtns = document.querySelectorAll('.type-btn');
 const reminderBtns = document.querySelectorAll('.reminder-btn');
 const reminderInfo = document.getElementById('reminder-info');
 const historySection = document.getElementById('history-section');
@@ -66,6 +68,13 @@ function renderClients() {
                 if (!hasActiveReminder) return false;
             }
         }
+        // Filtro por tipo de cliente
+        if (currentFilter === 'chines' && client.clientType !== 'chines') {
+            return false;
+        }
+        if (currentFilter === 'revendedor' && client.clientType !== 'revendedor') {
+            return false;
+        }
         // Filtro por estado
         if (['novo', 'contacto', 'fechado'].includes(currentFilter) && client.status !== currentFilter) {
             return false;
@@ -103,13 +112,21 @@ function renderClients() {
             'all': 'Ainda não tens clientes',
             'favoritos': 'Sem clientes favoritos',
             'pendentes': 'Sem lembretes pendentes',
+            'chines': 'Sem restaurantes chineses',
+            'revendedor': 'Sem revendedores',
             'novo': 'Sem clientes novos',
             'contacto': 'Sem clientes em contacto',
             'fechado': 'Sem clientes fechados'
         };
+        const emptyIcons = {
+            'favoritos': '⭐',
+            'pendentes': '🔔',
+            'chines': '🍜',
+            'revendedor': '🏪'
+        };
         clientList.innerHTML = `
             <div class="empty-state">
-                <div class="icon">${currentFilter === 'favoritos' ? '⭐' : currentFilter === 'pendentes' ? '🔔' : '📋'}</div>
+                <div class="icon">${emptyIcons[currentFilter] || '📋'}</div>
                 <p>${searchTerm ? 'Nenhum resultado encontrado' : emptyMessages[currentFilter]}</p>
                 <p style="margin-top: 8px; font-size: 0.9rem;">Carrega no + para adicionar</p>
             </div>
@@ -120,11 +137,12 @@ function renderClients() {
     clientList.innerHTML = filtered.map(client => {
         const reminderBadge = getReminderBadge(client);
         const phone = client.phone ? client.phone.replace(/\s/g, '') : '';
+        const typeIcon = getTypeIcon(client.clientType);
 
         return `
         <div class="client-card ${client.status} ${client.favorite ? 'is-favorite' : ''}" data-id="${client.id}">
             <span class="favorite-star ${client.favorite ? 'active' : ''}" data-id="${client.id}">⭐</span>
-            <div class="name">${escapeHtml(client.name)}${reminderBadge}</div>
+            <div class="name">${typeIcon ? `<span class="type-badge">${typeIcon}</span>` : ''}${escapeHtml(client.name)}${reminderBadge}</div>
             ${client.phone ? `<div class="phone">${escapeHtml(client.phone)}</div>` : ''}
             <span class="status-badge ${client.status}">${getStatusLabel(client.status)}</span>
             ${client.notes ? `<div class="notes-preview">${escapeHtml(client.notes)}</div>` : ''}
@@ -223,6 +241,22 @@ function getStatusLabel(status) {
     return labels[status] || status;
 }
 
+function getTypeIcon(type) {
+    const icons = {
+        'chines': '🍜',
+        'revendedor': '🏪'
+    };
+    return icons[type] || '';
+}
+
+function getTypeLabel(type) {
+    const labels = {
+        'chines': 'Chinês',
+        'revendedor': 'Revendedor'
+    };
+    return labels[type] || '';
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -310,11 +344,15 @@ function openNewModal() {
     deleteBtn.classList.add('hidden');
     historySection.style.display = 'none';
     selectedReminder = 'none';
+    selectedType = null;
 
     // Reset status buttons
     statusBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.status === 'novo');
     });
+
+    // Reset type buttons (nenhum selecionado por defeito)
+    typeBtns.forEach(btn => btn.classList.remove('active'));
 
     // Reset reminder buttons
     reminderBtns.forEach(btn => {
@@ -343,6 +381,12 @@ function openEditModal(id) {
     // Status buttons
     statusBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.status === client.status);
+    });
+
+    // Type buttons
+    selectedType = client.clientType || null;
+    typeBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === client.clientType);
     });
 
     // Reminder buttons
@@ -410,6 +454,7 @@ function saveClient(e) {
     const phone = document.getElementById('phone').value.trim();
     const notes = document.getElementById('notes').value.trim();
     const status = getSelectedStatus();
+    const clientType = selectedType;
     const reminder = selectedReminder !== 'none' ? calculateReminderTime(selectedReminder) : null;
 
     if (!name) {
@@ -428,6 +473,10 @@ function saveClient(e) {
 
             if (oldClient.status !== status) {
                 changes.push(`Estado: ${getStatusLabel(oldClient.status)} → ${getStatusLabel(status)}`);
+            }
+            if (oldClient.clientType !== clientType && clientType) {
+                const oldType = getTypeLabel(oldClient.clientType) || 'Sem tipo';
+                changes.push(`Tipo: ${oldType} → ${getTypeLabel(clientType)}`);
             }
             if (oldClient.notes !== notes && notes) {
                 changes.push(`Nota: ${notes}`);
@@ -455,6 +504,7 @@ function saveClient(e) {
                 phone,
                 notes,
                 status,
+                clientType: clientType || clients[index].clientType,
                 reminder: reminder || clients[index].reminder,
                 updatedAt: now
             };
@@ -462,6 +512,11 @@ function saveClient(e) {
             // Se selecionou "none", remover lembrete
             if (selectedReminder === 'none') {
                 delete clients[index].reminder;
+            }
+
+            // Se removeu o tipo (clicar no mesmo botão desseleciona)
+            if (!clientType) {
+                delete clients[index].clientType;
             }
 
             showToast('Cliente atualizado');
@@ -474,12 +529,15 @@ function saveClient(e) {
             phone,
             notes,
             status,
+            clientType,
             reminder,
             favorite: false,
             createdAt: now,
             updatedAt: now,
             history: []
         };
+        // Remover clientType se for null
+        if (!clientType) delete newClient.clientType;
         clients.unshift(newClient);
         showToast('Cliente adicionado');
     }
@@ -515,10 +573,11 @@ function exportToCSV() {
         return;
     }
 
-    const headers = ['Nome', 'Telefone', 'Estado', 'Notas', 'Favorito', 'Lembrete', 'Criado em'];
+    const headers = ['Nome', 'Telefone', 'Tipo', 'Estado', 'Notas', 'Favorito', 'Lembrete', 'Criado em'];
     const rows = clients.map(c => [
         c.name,
         c.phone || '',
+        getTypeLabel(c.clientType) || '',
         getStatusLabel(c.status),
         c.notes || '',
         c.favorite ? 'Sim' : 'Não',
@@ -643,6 +702,20 @@ statusBtns.forEach(btn => {
     });
 });
 
+// Type buttons no modal (toggle - clicar de novo desseleciona)
+typeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const wasActive = btn.classList.contains('active');
+        typeBtns.forEach(b => b.classList.remove('active'));
+        if (!wasActive) {
+            btn.classList.add('active');
+            selectedType = btn.dataset.type;
+        } else {
+            selectedType = null;
+        }
+    });
+});
+
 // Reminder buttons no modal
 reminderBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -695,24 +768,26 @@ if (clients.length === 0) {
     clients = [
         {
             id: generateId(),
-            name: 'Maria Silva',
+            name: 'Restaurante Dragão de Ouro',
             phone: '912 345 678',
-            notes: 'Interessada no serviço premium',
+            notes: 'Interessado em fornecimento semanal',
             status: 'novo',
+            clientType: 'chines',
             favorite: true,
-            reminder: now + 3600000, // 1 hora
+            reminder: now + 3600000,
             createdAt: now,
             updatedAt: now,
             history: []
         },
         {
             id: generateId(),
-            name: 'João Santos',
+            name: 'Casa do Arroz',
             phone: '963 852 741',
             notes: 'Ligou ontem, enviar proposta',
             status: 'contacto',
+            clientType: 'chines',
             favorite: false,
-            reminder: now + 86400000, // amanhã
+            reminder: now + 86400000,
             createdAt: now - 86400000,
             updatedAt: now - 3600000,
             history: [{
@@ -722,16 +797,17 @@ if (clients.length === 0) {
         },
         {
             id: generateId(),
-            name: 'Ana Costa',
+            name: 'Distribuidora Lisboa',
             phone: '939 147 258',
-            notes: 'Fechou pacote básico',
+            notes: 'Fechou contrato mensal',
             status: 'fechado',
+            clientType: 'revendedor',
             favorite: false,
             createdAt: now - 172800000,
             updatedAt: now - 86400000,
             history: [{
                 date: now - 86400000,
-                text: 'Estado: Em contacto → Fechado | Nota: Fechou pacote básico'
+                text: 'Estado: Em contacto → Fechado | Nota: Fechou contrato mensal'
             }]
         }
     ];
