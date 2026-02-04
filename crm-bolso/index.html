@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>CRM de Bolso</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ecrã Principal: Lista de Clientes -->
+    <div id="app">
+        <header>
+            <h1>CRM de Bolso</h1>
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Pesquisar..." autocomplete="off">
+            </div>
+            <div class="filters">
+                <button class="filter active" data-filter="all">Todos</button>
+                <button class="filter" data-filter="novo">Novo</button>
+                <button class="filter" data-filter="contacto">Em contacto</button>
+                <button class="filter" data-filter="fechado">Fechado</button>
+            </div>
+        </header>
+
+        <main id="client-list">
+            <!-- Clientes aparecem aqui -->
+        </main>
+
+        <button id="add-btn" aria-label="Adicionar cliente">+</button>
+    </div>
+
+    <!-- Modal: Novo/Editar Cliente -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Novo Cliente</h2>
+                <button id="close-modal" aria-label="Fechar">&times;</button>
+            </div>
+            <form id="client-form">
+                <input type="hidden" id="client-id">
+
+                <div class="field">
+                    <label for="name">Nome</label>
+                    <input type="text" id="name" required placeholder="Nome do cliente" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="phone">Telefone</label>
+                    <input type="tel" id="phone" placeholder="912 345 678" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="status">Estado</label>
+                    <div class="status-selector">
+                        <button type="button" class="status-btn active" data-status="novo">Novo</button>
+                        <button type="button" class="status-btn" data-status="contacto">Em contacto</button>
+                        <button type="button" class="status-btn" data-status="fechado">Fechado</button>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="notes">Notas</label>
+                    <textarea id="notes" rows="3" placeholder="Notas rápidas..."></textarea>
+                </div>
+
+                <div class="field" id="history-section" style="display: none;">
+                    <label>Histórico</label>
+                    <div id="history-list" class="history-list"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="delete-btn" class="btn-delete hidden">Eliminar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast para feedback -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+/* ================================
+   CRM de Bolso - Mobile First CSS
+   ================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --bg: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-modal: #16213e;
+    --text: #eaeaea;
+    --text-muted: #8892a0;
+    --accent: #4361ee;
+
+    /* Estados */
+    --novo: #3a86ff;
+    --contacto: #fb8500;
+    --fechado: #06d6a0;
+
+    --radius: 16px;
+    --radius-sm: 10px;
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+}
+
+/* ================================
+   Header e Pesquisa
+   ================================ */
+
+header {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 16px 16px 12px;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.search-box {
+    margin-bottom: 12px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.2s;
+}
+
+.search-box input:focus {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Filtros */
+.filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filters::-webkit-scrollbar {
+    display: none;
+}
+
+.filter {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter.active {
+    background: var(--accent);
+    color: white;
+}
+
+.filter[data-filter="novo"].active { background: var(--novo); }
+.filter[data-filter="contacto"].active { background: var(--contacto); }
+.filter[data-filter="fechado"].active { background: var(--fechado); }
+
+/* ================================
+   Lista de Clientes
+   ================================ */
+
+main {
+    padding: 12px 16px 100px;
+}
+
+.client-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border-left: 4px solid transparent;
+    position: relative;
+}
+
+.client-card:active {
+    transform: scale(0.98);
+}
+
+.client-card.novo { border-left-color: var(--novo); }
+.client-card.contacto { border-left-color: var(--contacto); }
+.client-card.fechado { border-left-color: var(--fechado); }
+
+.client-card .name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.client-card .phone {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.client-card .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.novo { background: rgba(58, 134, 255, 0.2); color: var(--novo); }
+.status-badge.contacto { background: rgba(251, 133, 0, 0.2); color: var(--contacto); }
+.status-badge.fechado { background: rgba(6, 214, 160, 0.2); color: var(--fechado); }
+
+.client-card .notes-preview {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-card .call-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.client-card .call-btn:active {
+    transform: translateY(-50%) scale(0.9);
+    background: #3651d4;
+}
+
+/* Estado vazio */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 1rem;
+}
+
+/* ================================
+   Botão Adicionar
+   ================================ */
+
+#add-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #7209b7);
+    color: white;
+    font-size: 2rem;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 50;
+}
+
+#add-btn:active {
+    transform: scale(0.9);
+}
+
+/* ================================
+   Modal
+   ================================ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    transition: opacity 0.25s, visibility 0.25s;
+}
+
+.modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: var(--bg-modal);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    overflow-y: auto;
+    transform: translateY(0);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.hidden .modal-content {
+    transform: translateY(100%);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+#close-modal {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Formulário */
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.field input,
+.field textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    transition: box-shadow 0.2s;
+}
+
+.field input:focus,
+.field textarea:focus {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Seletor de Estado */
+.status-selector {
+    display: flex;
+    gap: 8px;
+}
+
+.status-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: 2px solid var(--bg-card);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-btn[data-status="novo"].active {
+    border-color: var(--novo);
+    background: rgba(58, 134, 255, 0.15);
+    color: var(--novo);
+}
+
+.status-btn[data-status="contacto"].active {
+    border-color: var(--contacto);
+    background: rgba(251, 133, 0, 0.15);
+    color: var(--contacto);
+}
+
+.status-btn[data-status="fechado"].active {
+    border-color: var(--fechado);
+    background: rgba(6, 214, 160, 0.15);
+    color: var(--fechado);
+}
+
+/* Histórico */
+.history-list {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.85rem;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item .date {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+/* Botões do formulário */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.btn-save {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save:active {
+    background: #3651d4;
+}
+
+.btn-delete {
+    padding: 16px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-delete.hidden {
+    display: none;
+}
+
+/* ================================
+   Toast
+   ================================ */
+
+.toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-card);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 300;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.hidden {
+    display: none;
+}
+
+/* ================================
+   Responsivo - Tablet/Desktop
+   ================================ */
+
+@media (min-width: 768px) {
+    header {
+        padding: 20px 24px 16px;
+    }
+
+    main {
+        padding: 16px 24px 100px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .client-card {
+        margin-bottom: 0;
+    }
+
+    .modal-content {
+        border-radius: var(--radius);
+        margin: auto;
+        max-height: 85vh;
+    }
+}
+
+/* Safe area para iPhone X+ */
+@supports (padding: env(safe-area-inset-bottom)) {
+    #add-btn {
+        bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+}
